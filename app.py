@@ -10,8 +10,9 @@ st.set_page_config(
 )
 
 # API 키 확인
-if "ANTHROPIC_API_KEY" not in st.secrets:
-    st.error("⚠️ API 키가 설정되지 않았습니다. .streamlit/secrets.toml 파일에 API 키를 설정해주세요.")
+api_key = os.environ.get("ANTHROPIC_API_KEY")
+if not api_key:
+    st.error("⚠️ API 키가 설정되지 않았습니다. 환경 변수에 ANTHROPIC_API_KEY를 설정해주세요.")
     st.stop()
 
 # AI 도우미 초기화

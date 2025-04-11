@@ -1,10 +1,10 @@
 from anthropic import Anthropic
-import streamlit as st
+import os
 from typing import List, Dict, Any
 
 class AIHelper:
     def __init__(self):
-        self.client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+        self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
         self.model = "claude-3-7-sonnet-20250219"
     
     def generate_questions(self, text: str, difficulty: str = "medium", num_questions: int = 5) -> str:
