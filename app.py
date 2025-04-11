@@ -229,12 +229,14 @@ def main():
     st.sidebar.title("📚 영어 학습 도우미")
     menu = st.sidebar.radio(
         "메뉴",
-        ["홈", "문제 풀기", "빈칸 채우기", "단어 학습", "문장 재배열", "매칭 게임"]
+        ["홈", "본문 읽기", "문제 풀기", "빈칸 채우기", "단어 학습", "문장 재배열", "매칭 게임"]
     )
     
     # 선택한 메뉴에 따라 페이지 표시
     if menu == "홈":
         home_page()
+    elif menu == "본문 읽기":
+        reading_page()
     elif menu == "문제 풀기":
         quiz_page()
     elif menu == "빈칸 채우기":
@@ -262,6 +264,29 @@ def home_page():
     
     왼쪽 사이드바에서 원하는 기능을 선택하세요!
     """)
+
+def reading_page():
+    """본문 읽기 페이지"""
+    st.title("본문 읽기")
+    
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
+    
+    if selected_file:
+        content = read_markdown_file(selected_file)
+        
+        if not content:
+            st.error("파일을 읽을 수 없습니다.")
+            return
+        
+        # 텍스트 분리
+        english_text, korean_text = split_text_and_translation(content)
+        
+        # 텍스트 표시
+        display_text_with_translation(english_text, korean_text)
 
 def quiz_page():
     """문제 풀기 페이지"""
