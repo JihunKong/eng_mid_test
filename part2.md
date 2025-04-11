@@ -1,6 +1,3 @@
-
- Lesson 2. Embracing Our Differences  
-
 Opposite Personalities, Great Partnerships
 
 Everybody is unique. However, there have been many attempts to categorize people’s personalities. One of the most common methods divides people into two types, introverts and extroverts. According to this division, introverts tend to be drawn to the internal world of thoughts and feelings, while extroverts are drawn to the external world of people and activities. Introverts recharge their batteries by spending some time alone; extroverts need to recharge when they do not socialize enough. 

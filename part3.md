@@ -1,7 +1,4 @@
-
-Lesson 3. We Are All Connected 
- 
-Turn Off the Lights and Save a Tiger
+ Turn Off the Lights and Save a Tiger
 
 You can protect tigers simply by switching off the lights. This may sound strange, but it is actually true. An everyday action that helps us save energy can also help save an endangered species. How does this work? Let’s take a look.
 

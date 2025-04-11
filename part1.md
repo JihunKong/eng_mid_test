@@ -1,6 +1,4 @@
 
- Lesson 1. A Spark in You 
-
 Can I Swim?
 
 Tom Michell is a British teacher. In the 1970s, he worked at an English language boarding school in Argentina. One day he visited a beach and found a penguin that was injured and alone. Michell decided to help the bird. He cleaned it, fed it, and even gave it a name—Juan Salvado. From that day on, Juan Salvado lived on the terrace of his room in the school dormitory. The following is part of the story, written by Tom Michell, about the penguin and a boy at the school.
