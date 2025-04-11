@@ -72,15 +72,19 @@ def split_text_and_translation(content):
         if re.match(r'^p\.\d+$', line.strip()):
             continue
             
-        # 한국어 해석 시작 표시 (각 파트별 시작 문장)
-        korean_starters = [
-            'Tom Michell은', 'Diego의', '나는 깜짝 놀랐다', '그날 있었던 일들은',  # part1
-            '성격이 반대인 사람들', '그들은 서로를 보완한다', '그들의 협력은',  # part2
-            '호랑이는', '그들은', '우리는'  # part3
-        ]
-        
-        if any(line.strip().startswith(starter) for starter in korean_starters):
+        # 영어/한국어 구분 기준
+        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다') or line.strip().startswith('그날 있었던 일들은'):
             is_english = False
+        elif line.strip().startswith('Lesson') or line.strip().startswith('Tom Michell') or line.strip().startswith('From the first day'):
+            is_english = True
+        elif line.strip().startswith('성격이 반대인 사람들') or line.strip().startswith('그들은 서로를 보완한다') or line.strip().startswith('그들의 협력은'):
+            is_english = False
+        elif line.strip().startswith('Opposite Personalities') or line.strip().startswith('Everybody is unique'):
+            is_english = True
+        elif line.strip().startswith('호랑이는') or line.strip().startswith('그들은') or line.strip().startswith('우리는'):
+            is_english = False
+        elif line.strip().startswith('Turn Off the Lights') or line.strip().startswith('You can protect tigers'):
+            is_english = True
             
         if is_english:
             english_text.append(line)
