@@ -65,8 +65,12 @@ def split_text_and_translation(text):
         if not line:
             continue
             
-        # '수영해도 될까요?'를 기준으로 영어/한국어 구분
-        if line.startswith('수영해도 될까요?'):
+        # 각 파일의 기준점으로 영어/한국어 구분
+        if line.startswith('수영해도 될까요?'):  # part1
+            is_english = False
+        elif line.startswith('반대의 성격, 훌륭한 동반자 관계'):  # part2
+            is_english = False
+        elif line.startswith('불을 끄고 호랑이를 살리세요'):  # part3
             is_english = False
             
         if is_english:
