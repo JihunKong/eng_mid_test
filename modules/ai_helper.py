@@ -40,26 +40,46 @@ class AIHelper:
     
     def generate_fill_in_blank(self, text: str):
         prompt = f"""
-        다음 영어 지문을 바탕으로 빈칸 채우기 문제 5개를 생성해주세요.
+        다음 영어 지문을 바탕으로 객관식 문제 5개를 생성해주세요.
         각 문제는 다음 형식을 따라야 합니다:
-        1. 문장 (빈칸 포함)
-        2. 정답
-        3. 해설
+        1. 문제
+        2. 4개의 보기 (A, B, C, D)
+        3. 정답
+        4. 해설
 
         지문:
         {text}
+
+        출력 형식:
+        [
+            {{
+                "question": "문제 내용",
+                "options": [
+                    "A) 보기 1",
+                    "B) 보기 2",
+                    "C) 보기 3",
+                    "D) 보기 4"
+                ],
+                "answer": "정답",
+                "explanation": "해설"
+            }},
+            ...
+        ]
         """
         
         response = self.client.messages.create(
             model=self.model,
             max_tokens=4000,
-            system="You are an English teacher creating fill-in-the-blank exercises.",
+            system="You are an English teacher creating multiple-choice questions.",
             messages=[
                 {"role": "user", "content": prompt}
             ]
         )
         
-        return response.content[0].text
+        try:
+            return json.loads(response.content[0].text)
+        except:
+            return []
     
     def generate_sentence_rearrangement(self, text: str):
         prompt = f"""
