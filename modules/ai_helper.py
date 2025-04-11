@@ -49,6 +49,14 @@ class AIHelper:
         [문제 3, 4, 5 동일한 형식으로 작성]
         
         각 문제와 문제 사이, 그리고 각 해설과 해설 사이에는 줄바꿈을 추가하여 가독성을 높여주세요.
+        또한, 각 문제에서 선택지(A, B, C, D)는 다음과 같이 각각 줄바꿈하여 표시해주세요:
+        
+        문제 1
+        문제 내용
+        A) 보기 1
+        B) 보기 2
+        C) 보기 3
+        D) 보기 4
         
         지문:
         {text}
@@ -57,7 +65,7 @@ class AIHelper:
         response = self.client.messages.create(
             model=self.model,
             max_tokens=4000,
-            system="You are an English teacher creating multiple-choice questions. Always provide ALL QUESTIONS first, then ALL ANSWERS AND EXPLANATIONS separately. Never mix them. Use Korean for question content. Add line breaks between questions and between explanations for better readability.",
+            system="You are an English teacher creating multiple-choice questions. Always provide ALL QUESTIONS first, then ALL ANSWERS AND EXPLANATIONS separately. Never mix them. Use Korean for question content. Add line breaks between questions and between explanations for better readability. Format each option (A, B, C, D) on a new line.",
             messages=[
                 {"role": "user", "content": prompt}
             ]

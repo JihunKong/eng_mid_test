@@ -183,6 +183,12 @@ def quiz_page():
                                 explanations_part = "해설:" + parts[1].strip()
                                 # 문제와 해설 사이에 여백 추가
                                 questions = f"{questions_part}\n\n{explanations_part}"
+                        
+                        # 선택지 형식 개선 (A), B), C), D)를 찾아서 줄바꿈 추가)
+                        import re
+                        options_pattern = r'([A-D]\))'
+                        questions = re.sub(options_pattern, r'\n\1', questions)
+                        
                         st.session_state.questions = questions
                     else:
                         st.error("문제를 생성할 수 없습니다.")
