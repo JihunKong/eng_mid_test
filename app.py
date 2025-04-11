@@ -9,74 +9,82 @@ import random
 import requests
 from datetime import datetime
 
-def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
+def generate_fill_in_the_blank(text: str) -> Tuple[List[str], List[str]]:
     """빈칸 채우기 문제 생성"""
     result = call_ai_helper('generate_fill_in_blank', text)
     if not result:
         return [], []
         
     try:
+        # 문제와 해설 섹션 분리
+        parts = result.split('해설:')
+        if len(parts) != 2:
+            return [], []
+            
+        questions_part = parts[0].strip()
+        answers_part = '해설:' + parts[1].strip()
+        
+        # 문제 목록 추출
         questions = []
-        answers = []
-        
-        current_section = None
-        current_question = None
-        current_answer = None
-        
-        for line in result.split('\n'):
+        current_question = ""
+        for line in questions_part.split('\n'):
             line = line.strip()
             if not line:
                 continue
                 
             if line == '문제:':
-                current_section = '문제'
-                continue
-            elif line == '해설:':
-                current_section = '해설'
                 continue
                 
-            if current_section == '문제':
-                if line[0].isdigit() and line[1] == '.':
-                    if current_question:
-                        questions.append(current_question)
-                    current_question = {'question': line, 'options': []}
-                elif line.startswith(('A)', 'B)', 'C)', 'D)')):
-                    current_question['options'].append(line)
-            elif current_section == '해설':
-                if line[0].isdigit() and line[1] == '.':
-                    if current_answer:
-                        answers.append(current_answer)
-                    current_answer = {'answer': '', 'explanation': ''}
-                elif line.startswith('정답:'):
-                    current_answer['answer'] = line.replace('정답:', '').strip()
-                elif line.startswith('해설:'):
-                    current_answer['explanation'] = line.replace('해설:', '').strip()
-        
-        # 마지막 문제와 정답 처리
+            if line[0].isdigit() and line[1] == '.':
+                if current_question:
+                    questions.append(current_question)
+                current_question = line + "\n"
+            else:
+                current_question += line + "\n"
+                
         if current_question:
             questions.append(current_question)
+            
+        # 해설 목록 추출
+        answers = []
+        current_answer = ""
+        for line in answers_part.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+                
+            if line == '해설:':
+                continue
+                
+            if line[0].isdigit() and line[1] == '.':
+                if current_answer:
+                    answers.append(current_answer)
+                current_answer = line + "\n"
+            else:
+                current_answer += line + "\n"
+                
         if current_answer:
             answers.append(current_answer)
             
         return questions, answers
-    except:
+    except Exception as e:
+        st.error(f"문제 생성 중 오류: {str(e)}")
         return [], []
 
-def display_questions(questions: List[Dict[str, str]], answers: List[Dict[str, str]], user_answers: List[str]):
+def display_questions(questions: List[str], answers: List[str], user_answers: List[str]):
     """문제와 답안을 표시"""
+    # 모든 문제 먼저 표시
     st.markdown("### 문제")
     for i, question in enumerate(questions, 1):
-        st.markdown(f"**{question['question']}**")
-        for option in question['options']:
-            st.markdown(option)
+        st.markdown(f"**{question}**")
         st.markdown("---")
     
     # 답안 확인 버튼
     if st.button("답안 확인"):
+        # 모든 해설 표시
         st.markdown("### 해설")
         for i, answer in enumerate(answers, 1):
-            st.markdown(f"**{i}. {answer['answer']}**")
-            st.markdown(f"{answer['explanation']}")
+            st.markdown(f"**{answer}**")
             st.markdown("---")
 
 def display_text_with_translation(text: str, translation: str):
@@ -389,10 +397,7 @@ def main():
         st.markdown("### 문제")
         for i, question in enumerate(questions):
             st.markdown(f"**문제 {i + 1}**")
-            st.markdown(question['question'])
-            st.markdown("")
-            for option in question['options']:
-                st.markdown(option)
+            st.markdown(question)
             st.markdown("")
             user_answers[i] = st.text_input(f"답을 입력하세요 (문제 {i + 1}):", key=f"answer_{i}")
             st.markdown("---")
@@ -407,7 +412,7 @@ def main():
             for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
                 st.markdown(f"**{i + 1}번 정답 및 해설**")
                 st.markdown(f"정답: {correct_answer}")
-                st.markdown(f"해설: {question['explanation']}")
+                st.markdown(f"해설: {question}")
                 st.markdown("---")
             
             # 다시 풀기 버튼
