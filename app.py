@@ -52,16 +52,6 @@ def get_ai_helper():
 
 ai_helper = get_ai_helper()
 
-# 마크다운 파일 읽기 함수
-def read_markdown_file(file_path):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-        return content
-    except Exception as e:
-        st.error(f"⚠️ 파일을 읽는 중 오류가 발생했습니다: {str(e)}")
-        return None
-
 # 지문과 해석 분리 함수
 def split_text_and_translation(content):
     if not content:
@@ -82,8 +72,14 @@ def split_text_and_translation(content):
         if re.match(r'^p\.\d+$', line.strip()):
             continue
             
-        # 한국어 해석 시작 표시
-        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다') or line.strip().startswith('그날 있었던 일들은'):
+        # 한국어 해석 시작 표시 (각 파트별 시작 문장)
+        korean_starters = [
+            'Tom Michell은', 'Diego의', '나는 깜짝 놀랐다', '그날 있었던 일들은',  # part1
+            '성격이 반대인 사람들', '그들은 서로를 보완한다', '그들의 협력은',  # part2
+            '호랑이는', '그들은', '우리는'  # part3
+        ]
+        
+        if any(line.strip().startswith(starter) for starter in korean_starters):
             is_english = False
             
         if is_english:
@@ -96,6 +92,23 @@ def split_text_and_translation(content):
     korean_text = [line for line in korean_text if line.strip()]
     
     return '\n'.join(english_text), '\n'.join(korean_text)
+
+# 마크다운 파일 읽기 함수
+def read_markdown_file(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            # 파일 내용이 비어있는지 확인
+            if not content.strip():
+                st.error(f"⚠️ {file_path} 파일이 비어있습니다.")
+                return None
+            return content
+    except FileNotFoundError:
+        st.error(f"⚠️ {file_path} 파일을 찾을 수 없습니다.")
+        return None
+    except Exception as e:
+        st.error(f"⚠️ 파일을 읽는 중 오류가 발생했습니다: {str(e)}")
+        return None
 
 # 사이드바
 st.sidebar.title("📚 영어 학습 도우미")
