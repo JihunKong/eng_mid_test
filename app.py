@@ -109,10 +109,19 @@ def split_text_and_translation(text):
         elif line.startswith('불을 끄고 호랑이를 살리세요'):  # part3
             is_english = False
             
+        # 영어와 한국어 구분을 위한 추가 로직
         if is_english:
-            english_lines.append(line)
+            # 영어 문장인 경우
+            if any(char.isalpha() for char in line) and not any(ord('가') <= ord(char) <= ord('힣') for char in line):
+                english_lines.append(line)
+            else:
+                korean_lines.append(line)
         else:
-            korean_lines.append(line)
+            # 한국어 문장인 경우
+            if any(ord('가') <= ord(char) <= ord('힣') for char in line):
+                korean_lines.append(line)
+            else:
+                english_lines.append(line)
     
     # 빈 줄 제거
     english_text = '\n'.join(line for line in english_lines if line.strip())
