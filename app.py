@@ -302,6 +302,21 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
     except:
         return [], []
 
+def display_questions(questions: List[Dict[str, str]], answers: List[str], user_answers: List[str]):
+    """문제와 답안을 표시"""
+    st.markdown("### 문제")
+    for i, question in enumerate(questions, 1):
+        st.markdown(f"**{i}. {question['blank']}**")
+        st.markdown("")
+    
+    st.markdown("---")
+    st.markdown("### 답안")
+    for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, answers), 1):
+        st.markdown(f"**{i}. {question['blank']}**")
+        st.markdown(f"내 답: {user_answer}")
+        st.markdown(f"정답: {correct_answer}")
+        st.markdown("")
+
 def main():
     # ... (기존 코드 유지) ...
     
@@ -326,42 +341,24 @@ def main():
                     st.session_state['show_answers'] = False
                 
         if 'fill_in_blank_questions' in st.session_state:
-            current_q = st.session_state['current_question']
             questions = st.session_state['fill_in_blank_questions']
+            user_answers = st.session_state['user_answers']
             
-            if current_q < len(questions):
-                st.markdown(f"**문제 {current_q + 1}/{len(questions)}**")
-                st.markdown(f"원문: {questions[current_q]['original']}")
-                st.markdown(f"빈칸: {questions[current_q]['blank']}")
+            # 모든 문제 표시
+            for i, question in enumerate(questions):
+                st.markdown(f"**{i + 1}. {question['original']}**")
+                st.markdown(f"빈칸: {question['blank']}")
+                user_answers[i] = st.text_input(f"답을 입력하세요 (문제 {i + 1}):", key=f"answer_{i}")
+                st.markdown("---")
+            
+            if st.button("답안 확인"):
+                st.session_state['show_answers'] = True
                 
-                user_answer = st.text_input("답을 입력하세요:", key=f"answer_{current_q}")
-                if user_answer:
-                    st.session_state['user_answers'][current_q] = user_answer
-                    
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("이전 문제"):
-                        if current_q > 0:
-                            st.session_state['current_question'] -= 1
-                            st.experimental_rerun()
-                with col2:
-                    if st.button("다음 문제"):
-                        if current_q < len(questions) - 1:
-                            st.session_state['current_question'] += 1
-                            st.experimental_rerun()
-                        else:
-                            st.session_state['show_answers'] = True
-                            
-                if st.session_state['show_answers']:
-                    st.markdown("### 답안 확인")
-                    for i, (question, user_answer, correct_answer) in enumerate(zip(
-                        questions, 
-                        st.session_state['user_answers'], 
-                        st.session_state['fill_in_blank_answers']
-                    )):
-                        st.markdown(f"**문제 {i + 1}**")
-                        st.markdown(f"원문: {question['original']}")
-                        st.markdown(f"빈칸: {question['blank']}")
-                        st.markdown(f"내 답: {user_answer}")
-                        st.markdown(f"정답: {correct_answer}")
-                        st.markdown("---") 
+            if st.session_state['show_answers']:
+                st.markdown("### 답안")
+                for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
+                    st.markdown(f"**{i + 1}. {question['original']}**")
+                    st.markdown(f"빈칸: {question['blank']}")
+                    st.markdown(f"내 답: {user_answer}")
+                    st.markdown(f"정답: {correct_answer}")
+                    st.markdown("---") 
