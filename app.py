@@ -3,6 +3,12 @@ from modules.ai_helper import AIHelper
 import os
 import re
 import time
+import openai
+import json
+from typing import Tuple, List, Dict, Optional
+import random
+import requests
+from datetime import datetime
 
 # WebSocket 설정
 st.set_page_config(
@@ -41,6 +47,12 @@ if not api_key:
     st.error("⚠️ API 키가 설정되지 않았습니다. 환경 변수에 ANTHROPIC_API_KEY를 설정해주세요.")
     st.stop()
 
+# API 키 설정
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+if not OPENAI_API_KEY:
+    st.error("API 키가 설정되지 않았습니다. 환경 변수 OPENAI_API_KEY를 설정해주세요.")
+    st.stop()
+
 # AI 도우미 초기화
 @st.cache_resource
 def get_ai_helper():
@@ -51,6 +63,25 @@ def get_ai_helper():
         st.stop()
 
 ai_helper = get_ai_helper()
+
+# API 호출 함수에 재시도 로직 추가
+def call_openai_api(messages, max_retries=3, retry_delay=5):
+    for attempt in range(max_retries):
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1000
+            )
+            return response
+        except Exception as e:
+            if attempt < max_retries - 1:
+                st.warning(f"API 호출 실패 (시도 {attempt + 1}/{max_retries}). {retry_delay}초 후 재시도합니다...")
+                time.sleep(retry_delay)
+            else:
+                st.error(f"API 호출 실패: {str(e)}")
+                return None
 
 # 지문과 해석 분리 함수
 def split_text_and_translation(text):
@@ -140,13 +171,7 @@ if page == "읽기 모드":
         english_text, korean_text = split_text_and_translation(content)
         
         if english_text and korean_text:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("영어 지문")
-                st.write(english_text)
-            with col2:
-                st.subheader("한국어 해석")
-                st.write(korean_text)
+            display_text_with_translation(english_text, korean_text)
         else:
             st.warning("선택한 파일에서 지문을 불러올 수 없습니다. 파일이 올바른 형식인지 확인해주세요.")
     
@@ -177,8 +202,12 @@ elif page == "연습 모드":
                 st.subheader("빈칸 채우기")
                 with st.spinner("문제를 생성 중입니다..."):
                     try:
-                        questions = ai_helper.generate_fill_in_blank(english_text)
-                        st.write(questions)
+                        questions, answers = generate_fill_in_the_blank(english_text)
+                        st.session_state['fill_in_blank_questions'] = questions
+                        st.session_state['fill_in_blank_answers'] = answers
+                        st.session_state['current_question'] = 0
+                        st.session_state['user_answers'] = [""] * len(questions)
+                        st.session_state['show_answers'] = False
                     except Exception as e:
                         st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
             
@@ -236,4 +265,112 @@ elif page == "학습 분석":
 
 # 푸터
 st.markdown("---")
-st.markdown("© 2024 영어 학습 도우미. All rights reserved.") 
+st.markdown("© 2024 영어 학습 도우미. All rights reserved.")
+
+def display_text_with_translation(text: str, translation: str):
+    """텍스트와 번역을 문장 단위로 번갈아가며 표시"""
+    # 문장 분리 (마침표, 물음표, 느낌표 기준)
+    english_sentences = [s.strip() for s in re.split(r'[.!?]', text) if s.strip()]
+    korean_sentences = [s.strip() for s in re.split(r'[.!?]', translation) if s.strip()]
+    
+    # 최대 문장 수 맞추기
+    min_sentences = min(len(english_sentences), len(korean_sentences))
+    english_sentences = english_sentences[:min_sentences]
+    korean_sentences = korean_sentences[:min_sentences]
+    
+    # 문장 단위로 번갈아가며 표시
+    for eng, kor in zip(english_sentences, korean_sentences):
+        st.markdown(f"**{eng}**")
+        st.markdown(f"*{kor}*")
+        st.markdown("---")
+
+def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
+    """빈칸 채우기 문제 생성"""
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that creates fill-in-the-blank questions."},
+        {"role": "user", "content": f"Create 5 fill-in-the-blank questions from this text. For each question, provide the original sentence, the sentence with a blank (replace a key word with '_____'), and the answer. Format as JSON:\n\n{text}"}
+    ]
+    
+    response = call_openai_api(messages)
+    if not response:
+        return [], []
+        
+    try:
+        result = json.loads(response.choices[0].message.content)
+        questions = []
+        answers = []
+        
+        for item in result:
+            questions.append({
+                "original": item["original"],
+                "blank": item["blank"]
+            })
+            answers.append(item["answer"])
+            
+        return questions, answers
+    except:
+        return [], []
+
+def main():
+    # ... (기존 코드 유지) ...
+    
+    if page == "읽기":
+        if selected_file:
+            text, translation = load_markdown_file(selected_file)
+            if text and translation:
+                display_text_with_translation(text, translation)
+    
+    # ... (기존 코드 유지) ...
+    
+    elif page == "빈칸 채우기":
+        if selected_file:
+            text, _ = load_markdown_file(selected_file)
+            if text:
+                questions, answers = generate_fill_in_the_blank(text)
+                if questions:
+                    st.session_state['fill_in_blank_questions'] = questions
+                    st.session_state['fill_in_blank_answers'] = answers
+                    st.session_state['current_question'] = 0
+                    st.session_state['user_answers'] = [""] * len(questions)
+                    st.session_state['show_answers'] = False
+                
+        if 'fill_in_blank_questions' in st.session_state:
+            current_q = st.session_state['current_question']
+            questions = st.session_state['fill_in_blank_questions']
+            
+            if current_q < len(questions):
+                st.markdown(f"**문제 {current_q + 1}/{len(questions)}**")
+                st.markdown(f"원문: {questions[current_q]['original']}")
+                st.markdown(f"빈칸: {questions[current_q]['blank']}")
+                
+                user_answer = st.text_input("답을 입력하세요:", key=f"answer_{current_q}")
+                if user_answer:
+                    st.session_state['user_answers'][current_q] = user_answer
+                    
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("이전 문제"):
+                        if current_q > 0:
+                            st.session_state['current_question'] -= 1
+                            st.experimental_rerun()
+                with col2:
+                    if st.button("다음 문제"):
+                        if current_q < len(questions) - 1:
+                            st.session_state['current_question'] += 1
+                            st.experimental_rerun()
+                        else:
+                            st.session_state['show_answers'] = True
+                            
+                if st.session_state['show_answers']:
+                    st.markdown("### 답안 확인")
+                    for i, (question, user_answer, correct_answer) in enumerate(zip(
+                        questions, 
+                        st.session_state['user_answers'], 
+                        st.session_state['fill_in_blank_answers']
+                    )):
+                        st.markdown(f"**문제 {i + 1}**")
+                        st.markdown(f"원문: {question['original']}")
+                        st.markdown(f"빈칸: {question['blank']}")
+                        st.markdown(f"내 답: {user_answer}")
+                        st.markdown(f"정답: {correct_answer}")
+                        st.markdown("---") 
