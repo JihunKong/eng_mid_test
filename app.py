@@ -89,7 +89,7 @@ def read_markdown_file(file_path):
 
 def main():
     """메인 함수"""
-    st.sidebar.title("영어 학습 도우미")
+    st.sidebar.title("완도고 2-2 영어 학습 도우미")
     
     # 메뉴 선택
     menu = st.sidebar.radio(
@@ -111,9 +111,9 @@ def main():
 
 def home_page():
     """홈 페이지"""
-    st.title("영어 학습 도우미")
+    st.title("완도고 2-2 영어 학습 도우미")
     st.markdown("""
-    안녕하세요! 영어 학습 도우미에 오신 것을 환영합니다.
+    안녕하세요! 완도고 2-2 영어 학습 도우미에 오신 것을 환영합니다.
     
     이 앱은 다음과 같은 기능을 제공합니다:
     
@@ -528,4 +528,7 @@ def quiz_page():
                         st.rerun()
 
 if __name__ == "__main__":
-    main() 
+    main()
+    # 푸터 추가
+    st.markdown("---")
+    st.markdown("<div style='text-align: center; color: gray; font-size: 0.8em;'>2025. 완도고 2학년 2반을 위해 담임선생님이 만들다.</div>", unsafe_allow_html=True) 
