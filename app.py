@@ -8,7 +8,7 @@ import json
 
 # 페이지 설정
 st.set_page_config(
-    page_title="영어 학습 도우미",
+    page_title="완도고 2-2 영어 학습 도우미",
     page_icon="📚",
     layout="wide"
 )
