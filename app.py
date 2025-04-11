@@ -143,6 +143,12 @@ def quiz_page():
     """문제 풀기 페이지"""
     st.title("문제 풀기")
     
+    # 메뉴 선택
+    quiz_mode = st.sidebar.radio(
+        "문제 유형",
+        ["일반 객관식", "단계별 학습"]
+    )
+    
     # 파일 선택
     selected_file = st.selectbox(
         "파일 선택",
@@ -157,12 +163,24 @@ def quiz_page():
             english_lines = []
             korean_lines = []
             
-            # 영어와 한국어 구분 (간단한 방법)
+            # 한글 시작 문장 식별
+            korean_start_markers = {
+                "part1.md": "수영해도 될까요?",
+                "part2.md": "반대의 성격, 훌륭한 동반자 관계",
+                "part3.md": "불을 끄고 호랑이를 살리세요"
+            }
+            
+            # 한글 시작 인덱스 찾기
+            korean_start_idx = 0
             for i, line in enumerate(lines):
-                if i % 2 == 0:  # 짝수 인덱스는 영어로 가정
-                    english_lines.append(line)
-                else:  # 홀수 인덱스는 한국어로 가정
-                    korean_lines.append(line)
+                if korean_start_markers.get(selected_file) in line:
+                    korean_start_idx = i
+                    break
+            
+            # 줄바꿈을 기준으로 영어와 한글 분리
+            for i in range(korean_start_idx):
+                if lines[i].strip():
+                    english_lines.append(lines[i])
             
             english_text = '\n'.join(line for line in english_lines if line.strip())
             
@@ -170,44 +188,180 @@ def quiz_page():
             difficulty = st.selectbox("난이도 선택", ["쉬움", "보통", "어려움"])
             difficulty_eng = {"쉬움": "easy", "보통": "medium", "어려움": "hard"}
             
-            # 문제 생성 버튼
-            if st.button("문제 생성"):
-                with st.spinner("문제를 생성 중입니다..."):
-                    questions = ai_helper.generate_questions(english_text, difficulty_eng[difficulty])
-                    if questions:
-                        # 문제와 해설 분리
-                        if "문제:" in questions and "해설:" in questions:
-                            parts = questions.split("해설:")
-                            if len(parts) == 2:
-                                questions_part = parts[0].strip()
-                                explanations_part = "해설:" + parts[1].strip()
-                                # 문제와 해설 사이에 여백 추가
-                                questions = f"{questions_part}\n\n{explanations_part}"
-                        
-                        # 선택지 형식 개선 (A), B), C), D)를 찾아서 줄바꿈 추가)
-                        import re
-                        options_pattern = r'([A-D]\))'
-                        questions = re.sub(options_pattern, r'\n\1', questions)
-                        
-                        st.session_state.questions = questions
-                    else:
-                        st.error("문제를 생성할 수 없습니다.")
-            
-            # 문제 표시
-            if 'questions' in st.session_state:
-                # 문제와 해설 사이에 줄바꿈이 있는지 확인하고 표시
-                if "문제:" in st.session_state.questions and "해설:" in st.session_state.questions:
-                    parts = st.session_state.questions.split("해설:")
-                    if len(parts) == 2:
-                        st.markdown("## 문제")
-                        st.markdown(parts[0].replace("문제:", "").strip())
-                        st.markdown("---")
-                        st.markdown("## 해설")
-                        st.markdown(parts[1].strip())
+            if quiz_mode == "일반 객관식":
+                # 기존 문제 생성 방식
+                # 문제 생성 버튼
+                if st.button("문제 생성"):
+                    with st.spinner("문제를 생성 중입니다..."):
+                        questions = ai_helper.generate_questions(english_text, difficulty_eng[difficulty])
+                        if questions:
+                            # 문제와 해설 분리
+                            if "문제:" in questions and "해설:" in questions:
+                                parts = questions.split("해설:")
+                                if len(parts) == 2:
+                                    questions_part = parts[0].strip()
+                                    explanations_part = "해설:" + parts[1].strip()
+                                    # 문제와 해설 사이에 여백 추가
+                                    questions = f"{questions_part}\n\n{explanations_part}"
+                            
+                            # 선택지 형식 개선 (A), B), C), D)를 찾아서 줄바꿈 추가)
+                            import re
+                            options_pattern = r'([A-D]\))'
+                            questions = re.sub(options_pattern, r'\n\1', questions)
+                            
+                            st.session_state.questions = questions
+                        else:
+                            st.error("문제를 생성할 수 없습니다.")
+                
+                # 문제 표시
+                if 'questions' in st.session_state:
+                    # 문제와 해설 사이에 줄바꿈이 있는지 확인하고 표시
+                    if "문제:" in st.session_state.questions and "해설:" in st.session_state.questions:
+                        parts = st.session_state.questions.split("해설:")
+                        if len(parts) == 2:
+                            st.markdown("## 문제")
+                            st.markdown(parts[0].replace("문제:", "").strip())
+                            st.markdown("---")
+                            st.markdown("## 해설")
+                            st.markdown(parts[1].strip())
+                        else:
+                            st.markdown(st.session_state.questions)
                     else:
                         st.markdown(st.session_state.questions)
-                else:
-                    st.markdown(st.session_state.questions)
+            
+            elif quiz_mode == "단계별 학습":
+                # 새로운 상호작용 방식의 문제 (하나씩 풀기)
+                
+                # 세션 상태 초기화
+                if 'current_question' not in st.session_state:
+                    st.session_state.current_question = None
+                if 'question_history' not in st.session_state:
+                    st.session_state.question_history = []
+                if 'selected_answer' not in st.session_state:
+                    st.session_state.selected_answer = None
+                if 'show_explanation' not in st.session_state:
+                    st.session_state.show_explanation = False
+                if 'current_question_type' not in st.session_state:
+                    st.session_state.current_question_type = "comprehension"
+                
+                # 문제 유형 선택
+                question_types = {
+                    "comprehension": "지문 이해 문제",
+                    "vocabulary": "어휘 문제",
+                    "grammar": "문법 문제", 
+                    "blank": "빈칸 추론 문제",
+                    "ordering": "문장 배열 문제"
+                }
+                
+                # 새 문제를 생성할 시점에만 문제 유형 선택 가능
+                if st.session_state.current_question is None:
+                    selected_type = st.selectbox(
+                        "문제 유형 선택",
+                        list(question_types.keys()),
+                        format_func=lambda x: question_types[x]
+                    )
+                    st.session_state.current_question_type = selected_type
+                
+                # 문제 생성 버튼
+                if st.session_state.current_question is None:
+                    if st.button("새 문제 생성"):
+                        with st.spinner("문제를 생성 중입니다..."):
+                            question_data = ai_helper.generate_single_question(
+                                english_text, 
+                                difficulty_eng[difficulty],
+                                st.session_state.current_question_type
+                            )
+                            st.session_state.current_question = question_data
+                            st.session_state.selected_answer = None
+                            st.session_state.show_explanation = False
+                            st.rerun()
+                
+                # 문제 표시
+                if st.session_state.current_question:
+                    question_data = st.session_state.current_question
+                    
+                    # 문제 내용 표시
+                    st.markdown(f"## {question_types[st.session_state.current_question_type]}")
+                    st.markdown(question_data.get('question', '문제 로딩 중...'))
+                    
+                    # 선택지 표시 (라디오 버튼)
+                    options = question_data.get('options', [])
+                    option_texts = []
+                    for opt in options:
+                        option_texts.append(opt)
+                    
+                    if not st.session_state.show_explanation:
+                        answer = st.radio(
+                            "답을 선택하세요:",
+                            option_texts,
+                            key=f"answer_{len(st.session_state.question_history)}"
+                        )
+                        st.session_state.selected_answer = answer
+                        
+                        if st.button("제출"):
+                            st.session_state.show_explanation = True
+                            st.rerun()
+                    
+                    # 해설 표시
+                    if st.session_state.show_explanation:
+                        correct_answer = question_data.get('answer', '')
+                        selected_option = st.session_state.selected_answer
+                        
+                        is_correct = False
+                        for opt in option_texts:
+                            if correct_answer in opt:
+                                correct_option = opt
+                                if selected_option == opt:
+                                    is_correct = True
+                                break
+                        
+                        if is_correct:
+                            st.success("정답입니다! 👏")
+                        else:
+                            st.error("오답입니다.")
+                            st.info(f"정답: {correct_option}")
+                        
+                        st.markdown("### 해설")
+                        st.markdown(question_data.get('explanation', '해설 로딩 중...'))
+                        
+                        # 다음 문제 또는 종료 버튼
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            if st.button("다음 문제"):
+                                # 현재 문제를 히스토리에 추가
+                                st.session_state.question_history.append(st.session_state.current_question)
+                                # 새 문제 생성 준비
+                                st.session_state.current_question = None
+                                st.session_state.selected_answer = None
+                                st.session_state.show_explanation = False
+                                st.rerun()
+                        
+                        with col2:
+                            if st.button("학습 종료"):
+                                # 히스토리 요약 표시 후 세션 초기화
+                                st.session_state.question_history.append(st.session_state.current_question)
+                                total = len(st.session_state.question_history)
+                                st.session_state.current_question = None
+                                st.session_state.selected_answer = None
+                                st.session_state.show_explanation = False
+                                st.session_state.result_summary = f"총 {total}개의 문제를 풀었습니다."
+                                st.rerun()
+                
+                # 히스토리 요약 표시
+                if 'result_summary' in st.session_state:
+                    st.markdown("## 학습 결과")
+                    st.markdown(st.session_state.result_summary)
+                    if st.button("다시 시작"):
+                        # 세션 초기화
+                        st.session_state.current_question = None
+                        st.session_state.question_history = []
+                        st.session_state.selected_answer = None
+                        st.session_state.show_explanation = False
+                        st.session_state.current_question_type = "comprehension"
+                        if 'result_summary' in st.session_state:
+                            del st.session_state.result_summary
+                        st.rerun()
 
 if __name__ == "__main__":
     main() 
