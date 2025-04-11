@@ -1,10 +1,11 @@
 from anthropic import Anthropic
-import os
 from typing import List, Dict, Any
 
 class AIHelper:
-    def __init__(self):
-        self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    def __init__(self, api_key: str):
+        if not api_key:
+            raise ValueError("API 키가 제공되지 않았습니다.")
+        self.client = Anthropic(api_key=api_key)
         self.model = "claude-3-7-sonnet-20250219"
     
     def generate_questions(self, text: str, difficulty: str = "medium", num_questions: int = 5) -> str:

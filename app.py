@@ -18,7 +18,11 @@ if not api_key:
 # AI 도우미 초기화
 @st.cache_resource
 def get_ai_helper():
-    return AIHelper()
+    try:
+        return AIHelper(api_key=api_key)
+    except Exception as e:
+        st.error(f"⚠️ AI 도우미 초기화 중 오류가 발생했습니다: {str(e)}")
+        st.stop()
 
 ai_helper = get_ai_helper()
 
@@ -70,8 +74,11 @@ elif page == "테스트 모드":
         
         if st.button("문제 생성"):
             with st.spinner("문제를 생성 중입니다..."):
-                questions = ai_helper.generate_questions(text, difficulty, num_questions)
-                st.write(questions)
+                try:
+                    questions = ai_helper.generate_questions(text, difficulty, num_questions)
+                    st.write(questions)
+                except Exception as e:
+                    st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
     
 elif page == "학습 분석":
     st.header("📊 학습 분석")
