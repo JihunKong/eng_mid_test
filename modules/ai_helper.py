@@ -1,5 +1,7 @@
 import anthropic
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
+import re
+import json
 
 class AIHelper:
     def __init__(self, api_key: str):
@@ -62,18 +64,41 @@ class AIHelper:
         {text}
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=4000,
-            system="You are an English teacher creating multiple-choice questions. Always provide ALL QUESTIONS first, then ALL ANSWERS AND EXPLANATIONS separately. Never mix them. Use Korean for question content. Add line breaks between questions and between explanations for better readability. Format each option (A, B, C, D) on a new line.",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        return response.content[0].text
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=4000,
+                system="You are an English teacher creating multiple-choice questions. Always provide ALL QUESTIONS first, then ALL ANSWERS AND EXPLANATIONS separately. Never mix them. Use Korean for question content. Add line breaks between questions and between explanations for better readability. Format each option (A, B, C, D) on a new line.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            
+            if hasattr(response, 'content') and len(response.content) > 0:
+                return response.content[0].text
+            else:
+                return "문제를 생성할 수 없습니다. 응답이 비어있습니다."
+        except Exception as e:
+            return f"문제 생성 중 오류가 발생했습니다: {str(e)[:100]}"
     
-    def generate_single_question(self, text: str, difficulty: str = "medium", question_type: str = "comprehension") -> dict:
+    def _create_default_question(self, error_msg: str = "") -> Dict[str, Any]:
+        """기본 문제 객체 생성"""
+        if error_msg:
+            error_msg = f" - {error_msg}"
+        
+        return {
+            "question": f"문제 생성 중 오류가 발생했습니다{error_msg}",
+            "options": [
+                "A) 다시 시도해주세요",
+                "B) 다른 유형의 문제를 선택해보세요",
+                "C) 난이도를 변경해보세요",
+                "D) 다른 지문을 선택해보세요"
+            ],
+            "answer": "A",
+            "explanation": "기술적인 문제로 문제 생성에 실패했습니다. 다시 시도해주세요."
+        }
+    
+    def generate_single_question(self, text: str, difficulty: str = "medium", question_type: str = "comprehension") -> Dict[str, Any]:
         """단일 문제 생성 (다양한 유형)"""
         # 문제 유형별 프롬프트 조정
         type_prompts = {
@@ -98,71 +123,71 @@ class AIHelper:
                 "C) 보기 3",
                 "D) 보기 4"
             ],
-            "answer": "정답 (A, B, C, D 중 하나)",
+            "answer": "A",
             "explanation": "자세한 해설"
         }}
         
         반드시 JSON 형식으로 응답해주세요. 다른 설명이나 텍스트는 포함하지 마세요.
+        JSON 포맷을 정확히 지켜주세요. 특히 answer 필드는 A, B, C, D 중 하나만 포함해야 합니다.
         
         지문:
         {text}
         """
         
-        # import 문을 함수 맨 위로 이동
-        import re
-        import json
-        
         try:
+            # API 호출
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=2000,
-                system="You are an English teacher creating multiple-choice questions for high school students. Create ONE question at a time. Return your response in valid JSON format. Use Korean for question content and explanations.",
+                system="You are an English teacher creating multiple-choice questions for high school students. Create ONE question at a time. Return your response in valid JSON format with the following keys: question, options (array), answer (A, B, C, or D), and explanation. Use Korean for question content and explanations.",
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
             )
             
+            # 응답 확인
+            if not hasattr(response, 'content') or len(response.content) == 0:
+                return self._create_default_question("API 응답이 비어있습니다")
+            
             # 응답 처리
             content = response.content[0].text
             
-            # JSON 응답 찾기 (중괄호로 둘러싸인 부분)
+            # JSON 추출 시도
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if not json_match:
+                return self._create_default_question("JSON 형식을 찾을 수 없습니다")
             
-            if json_match:
-                json_str = json_match.group(0)
-                try:
-                    question_data = json.loads(json_str)
-                    
-                    # 필수 필드 검사
-                    required_fields = ["question", "options", "answer", "explanation"]
-                    for field in required_fields:
-                        if field not in question_data:
-                            question_data[field] = field + " 필드가 누락되었습니다" if field == "question" or field == "explanation" else []
-                    
-                    # options가 리스트인지 확인
-                    if not isinstance(question_data["options"], list) or len(question_data["options"]) < 1:
-                        question_data["options"] = ["A) 옵션 데이터가 올바르지 않습니다"]
-                    
-                    return question_data
-                except json.JSONDecodeError as e:
-                    return {
-                        "question": "JSON 형식 오류가 발생했습니다",
-                        "options": ["A) JSON 파싱 오류: " + str(e)[:100]],
-                        "answer": "A",
-                        "explanation": "JSON 형식이 올바르지 않습니다. 다시 시도해주세요."
-                    }
-            else:
-                # JSON이 아닌 경우 응답 구조화 시도
-                return {
-                    "question": "응답이 JSON 형식이 아닙니다",
-                    "options": ["A) JSON 형식이 아님: " + content[:50] + "..."],
-                    "answer": "A",
-                    "explanation": "응답 형식 오류. 다시 시도해주세요."
-                }
+            json_str = json_match.group(0)
+            
+            # JSON 파싱 시도
+            try:
+                question_data = json.loads(json_str)
+            except json.JSONDecodeError:
+                return self._create_default_question("JSON 파싱 오류")
+            
+            # 필수 필드 검사 및 보정
+            required_fields = ["question", "options", "answer", "explanation"]
+            for field in required_fields:
+                if field not in question_data:
+                    if field == "options":
+                        question_data[field] = ["A) 옵션이 없습니다", "B) 옵션2", "C) 옵션3", "D) 옵션4"]
+                    elif field == "answer":
+                        question_data[field] = "A"
+                    else:
+                        question_data[field] = f"{field} 필드가 누락되었습니다"
+            
+            # options 필드 검사
+            if not isinstance(question_data["options"], list):
+                question_data["options"] = ["A) 옵션이 올바르지 않습니다", "B) 옵션2", "C) 옵션3", "D) 옵션4"]
+            elif len(question_data["options"]) < 2:
+                while len(question_data["options"]) < 4:
+                    question_data["options"].append(f"{chr(65 + len(question_data['options']))} 추가 옵션")
+            
+            # answer 필드 검사 (A, B, C, D 중 하나인지)
+            if not isinstance(question_data["answer"], str) or question_data["answer"] not in ["A", "B", "C", "D"]:
+                question_data["answer"] = "A"
+            
+            return question_data
+            
         except Exception as e:
-            return {
-                "question": "문제 생성 중 오류가 발생했습니다",
-                "options": ["A) 오류: " + str(e)[:100]],
-                "answer": "A",
-                "explanation": "응답 처리 오류. 다시 시도해주세요."
-            } 
+            return self._create_default_question(str(e)[:50]) 

@@ -243,6 +243,12 @@ def quiz_page():
                     st.session_state.show_explanation = False
                 if 'current_question_type' not in st.session_state:
                     st.session_state.current_question_type = "comprehension"
+                if 'error_count' not in st.session_state:
+                    st.session_state.error_count = 0
+                
+                # 오류 횟수가 많으면 사용자에게 알림
+                if st.session_state.error_count > 2:
+                    st.warning("문제 생성 중 여러 번 오류가 발생했습니다. 다른 유형이나 지문을 선택해보세요.")
                 
                 # 문제 유형 선택
                 question_types = {
@@ -255,111 +261,160 @@ def quiz_page():
                 
                 # 새 문제를 생성할 시점에만 문제 유형 선택 가능
                 if st.session_state.current_question is None:
-                    selected_type = st.selectbox(
-                        "문제 유형 선택",
-                        list(question_types.keys()),
-                        format_func=lambda x: question_types[x]
-                    )
-                    st.session_state.current_question_type = selected_type
+                    try:
+                        selected_type = st.selectbox(
+                            "문제 유형 선택",
+                            list(question_types.keys()),
+                            format_func=lambda x: question_types.get(x, x)
+                        )
+                        st.session_state.current_question_type = selected_type
+                    except Exception as e:
+                        st.error(f"문제 유형 선택 중 오류가 발생했습니다: {str(e)}")
+                        st.session_state.current_question_type = "comprehension"
                 
                 # 문제 생성 버튼
                 if st.session_state.current_question is None:
                     if st.button("새 문제 생성"):
                         with st.spinner("문제를 생성 중입니다..."):
-                            question_data = ai_helper.generate_single_question(
-                                english_text, 
-                                difficulty_eng[difficulty],
-                                st.session_state.current_question_type
-                            )
-                            st.session_state.current_question = question_data
-                            st.session_state.selected_answer = None
-                            st.session_state.show_explanation = False
-                            st.rerun()
+                            try:
+                                # 안전하게 AI 헬퍼 호출
+                                if not english_text or len(english_text) < 10:
+                                    st.error("지문이 너무 짧습니다. 다른 파일을 선택하세요.")
+                                else:
+                                    question_data = ai_helper.generate_single_question(
+                                        english_text, 
+                                        difficulty_eng.get(difficulty, "medium"),
+                                        st.session_state.current_question_type
+                                    )
+                                    
+                                    # 유효한 문제인지 확인
+                                    if (isinstance(question_data, dict) and 
+                                        "question" in question_data and
+                                        "options" in question_data and 
+                                        isinstance(question_data["options"], list)):
+                                        
+                                        st.session_state.current_question = question_data
+                                        st.session_state.selected_answer = None
+                                        st.session_state.show_explanation = False
+                                        st.session_state.error_count = 0
+                                    else:
+                                        st.error("문제 생성에 실패했습니다. 다시 시도하세요.")
+                                        st.session_state.error_count += 1
+                            except Exception as e:
+                                st.error(f"문제 생성 중 오류가 발생했습니다: {str(e)}")
+                                st.session_state.error_count += 1
                 
                 # 문제 표시
                 if st.session_state.current_question:
-                    question_data = st.session_state.current_question
-                    
-                    # 문제 내용 표시
-                    st.markdown(f"## {question_types[st.session_state.current_question_type]}")
-                    st.markdown(question_data.get('question', '문제 로딩 중...'))
-                    
-                    # 선택지 표시 (라디오 버튼)
-                    options = question_data.get('options', [])
-                    option_texts = []
-                    
-                    # 옵션이 비어있거나 리스트가 아닌 경우 처리
-                    if not options or not isinstance(options, list):
-                        options = ["A) 선택지를 불러올 수 없습니다."]
-                    
-                    for opt in options:
-                        if isinstance(opt, str):
-                            option_texts.append(opt)
-                    
-                    # 선택지가 비어있는 경우 기본값 추가
-                    if not option_texts:
-                        option_texts = ["A) 선택지가 제공되지 않았습니다."]
-                    
-                    if not st.session_state.show_explanation:
-                        answer = st.radio(
-                            "답을 선택하세요:",
-                            option_texts,
-                            key=f"answer_{len(st.session_state.question_history)}"
-                        )
-                        st.session_state.selected_answer = answer
+                    try:
+                        question_data = st.session_state.current_question
                         
-                        if st.button("제출"):
-                            st.session_state.show_explanation = True
-                            st.rerun()
-                    
-                    # 해설 표시
-                    if st.session_state.show_explanation:
-                        correct_answer = question_data.get('answer', '')
-                        selected_option = st.session_state.selected_answer
-                        
-                        is_correct = False
-                        correct_option = "정답을 확인할 수 없습니다."
-                        
-                        # 정답 확인
-                        for opt in option_texts:
-                            if correct_answer in opt:
-                                correct_option = opt
-                                if selected_option == opt:
-                                    is_correct = True
-                                break
-                        
-                        if is_correct:
-                            st.success("정답입니다! 👏")
+                        # 문제 내용 표시
+                        current_type = st.session_state.current_question_type
+                        if current_type in question_types:
+                            st.markdown(f"## {question_types[current_type]}")
                         else:
-                            st.error("오답입니다.")
-                            st.info(f"정답: {correct_option}")
+                            st.markdown("## 문제")
+                            
+                        st.markdown(question_data.get('question', '문제 로딩 중...'))
                         
-                        st.markdown("### 해설")
-                        st.markdown(question_data.get('explanation', '해설 로딩 중...'))
+                        # 선택지 표시 (라디오 버튼)
+                        options = question_data.get('options', [])
+                        option_texts = []
                         
-                        # 다음 문제 또는 종료 버튼
-                        col1, col2 = st.columns(2)
+                        # 옵션이 비어있거나 리스트가 아닌 경우 처리
+                        if not isinstance(options, list) or len(options) == 0:
+                            options = ["A) 선택지를 불러올 수 없습니다.", "B) 옵션 B", "C) 옵션 C", "D) 옵션 D"]
                         
-                        with col1:
-                            if st.button("다음 문제"):
-                                # 현재 문제를 히스토리에 추가
-                                st.session_state.question_history.append(st.session_state.current_question)
-                                # 새 문제 생성 준비
-                                st.session_state.current_question = None
-                                st.session_state.selected_answer = None
-                                st.session_state.show_explanation = False
-                                st.rerun()
+                        # 옵션 텍스트 확인
+                        for opt in options:
+                            if isinstance(opt, str) and opt.strip():
+                                option_texts.append(opt)
+                            
+                        # 선택지가 비어있는 경우 기본값 추가
+                        if len(option_texts) < 2:
+                            option_texts = ["A) 선택지가 제공되지 않았습니다.", "B) 옵션 B", "C) 옵션 C", "D) 옵션 D"]
                         
-                        with col2:
-                            if st.button("학습 종료"):
-                                # 히스토리 요약 표시 후 세션 초기화
-                                st.session_state.question_history.append(st.session_state.current_question)
-                                total = len(st.session_state.question_history)
-                                st.session_state.current_question = None
-                                st.session_state.selected_answer = None
-                                st.session_state.show_explanation = False
-                                st.session_state.result_summary = f"총 {total}개의 문제를 풀었습니다."
-                                st.rerun()
+                        if not st.session_state.show_explanation:
+                            answer = st.radio(
+                                "답을 선택하세요:",
+                                option_texts,
+                                key=f"answer_{len(st.session_state.question_history)}"
+                            )
+                            st.session_state.selected_answer = answer
+                            
+                            if st.button("제출"):
+                                st.session_state.show_explanation = True
+                                st.experimental_rerun()
+                        
+                        # 해설 표시
+                        if st.session_state.show_explanation:
+                            try:
+                                correct_answer = question_data.get('answer', 'A')
+                                # 문자열로 변환 및 단일 문자만 추출
+                                if isinstance(correct_answer, str) and len(correct_answer) > 0:
+                                    correct_answer = correct_answer[0].upper()  # 첫 글자만 사용
+                                    if correct_answer not in ['A', 'B', 'C', 'D']:
+                                        correct_answer = 'A'  # 기본값
+                                else:
+                                    correct_answer = 'A'  # 기본값
+                                    
+                                selected_option = st.session_state.selected_answer
+                                
+                                is_correct = False
+                                correct_option = "정답을 확인할 수 없습니다."
+                                
+                                # 정답 확인
+                                for opt in option_texts:
+                                    if opt.startswith(correct_answer + ")") or opt.startswith(correct_answer + " "):
+                                        correct_option = opt
+                                        if selected_option == opt:
+                                            is_correct = True
+                                        break
+                                
+                                if is_correct:
+                                    st.success("정답입니다! 👏")
+                                else:
+                                    st.error("오답입니다.")
+                                    st.info(f"정답: {correct_option}")
+                                
+                                st.markdown("### 해설")
+                                explanation = question_data.get('explanation', '해설이 제공되지 않았습니다.')
+                                if not explanation or not isinstance(explanation, str):
+                                    explanation = '해설이 제공되지 않았습니다.'
+                                st.markdown(explanation)
+                            except Exception as e:
+                                st.error(f"해설 표시 중 오류가 발생했습니다: {str(e)}")
+                            
+                            # 다음 문제 또는 종료 버튼
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                if st.button("다음 문제"):
+                                    # 현재 문제를 히스토리에 추가
+                                    if isinstance(st.session_state.current_question, dict):
+                                        st.session_state.question_history.append(st.session_state.current_question)
+                                    # 새 문제 생성 준비
+                                    st.session_state.current_question = None
+                                    st.session_state.selected_answer = None
+                                    st.session_state.show_explanation = False
+                                    st.experimental_rerun()
+                            
+                            with col2:
+                                if st.button("학습 종료"):
+                                    # 히스토리 요약 표시 후 세션 초기화
+                                    if isinstance(st.session_state.current_question, dict):
+                                        st.session_state.question_history.append(st.session_state.current_question)
+                                    total = len(st.session_state.question_history)
+                                    st.session_state.current_question = None
+                                    st.session_state.selected_answer = None
+                                    st.session_state.show_explanation = False
+                                    st.session_state.result_summary = f"총 {total}개의 문제를 풀었습니다."
+                                    st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"문제 표시 중 오류가 발생했습니다: {str(e)}")
+                        st.session_state.current_question = None
+                        st.session_state.error_count += 1
                 
                 # 히스토리 요약 표시
                 if 'result_summary' in st.session_state:
@@ -367,14 +422,12 @@ def quiz_page():
                     st.markdown(st.session_state.result_summary)
                     if st.button("다시 시작"):
                         # 세션 초기화
-                        st.session_state.current_question = None
-                        st.session_state.question_history = []
-                        st.session_state.selected_answer = None
-                        st.session_state.show_explanation = False
+                        for key in ['current_question', 'question_history', 'selected_answer', 
+                                    'show_explanation', 'result_summary', 'error_count']:
+                            if key in st.session_state:
+                                del st.session_state[key]
                         st.session_state.current_question_type = "comprehension"
-                        if 'result_summary' in st.session_state:
-                            del st.session_state.result_summary
-                        st.rerun()
+                        st.experimental_rerun()
 
 if __name__ == "__main__":
     main() 
