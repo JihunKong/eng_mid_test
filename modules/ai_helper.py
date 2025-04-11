@@ -47,6 +47,7 @@ class AIHelper:
         2. 보기는 4개이며, 정답은 지문에서 직접적으로 언급된 내용이어야 합니다.
         3. 해설은 지문의 구체적인 부분을 인용하여 설명해야 합니다.
         4. 문제, 보기, 정답, 해설은 모두 한국어로 작성해야 합니다.
+        5. 문제와 정답/해설은 완전히 분리되어야 합니다.
 
         출력 형식:
         문제 1:
@@ -63,17 +64,17 @@ class AIHelper:
         C) 보기 3
         D) 보기 4
 
-        ...
+        [문제 3-5 생략]
 
         정답 1:
-        정답
-        해설
+        정답: A) 보기 1
+        해설: 지문의 구체적인 부분을 인용하여 설명
 
         정답 2:
-        정답
-        해설
+        정답: B) 보기 2
+        해설: 지문의 구체적인 부분을 인용하여 설명
 
-        ...
+        [정답 3-5 생략]
 
         지문:
         {text}
@@ -82,7 +83,7 @@ class AIHelper:
         response = self.client.messages.create(
             model=self.model,
             max_tokens=4000,
-            system="You are an English teacher creating multiple-choice questions. You must create questions that test comprehension of the text, with clear correct answers and detailed explanations.",
+            system="You are an English teacher creating multiple-choice questions. You must create questions that test comprehension of the text, with clear correct answers and detailed explanations. Questions and answers must be completely separated.",
             messages=[
                 {"role": "user", "content": prompt}
             ]

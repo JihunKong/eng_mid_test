@@ -9,7 +9,7 @@ import random
 import requests
 from datetime import datetime
 
-def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
+def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     """빈칸 채우기 문제 생성"""
     result = call_ai_helper('generate_fill_in_blank', text)
     if not result:
@@ -19,7 +19,6 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
         questions = []
         answers = []
         
-        # 문제와 해설을 분리
         current_section = None
         current_question = None
         current_answer = None
@@ -30,27 +29,28 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
                 continue
                 
             if line.startswith('문제'):
-                if current_question and current_answer:
+                if current_question:
                     questions.append(current_question)
-                    answers.append(current_answer)
                 current_section = '문제'
                 current_question = {'question': line, 'options': []}
-                current_answer = None
             elif line.startswith('정답'):
+                if current_answer:
+                    answers.append(current_answer)
                 current_section = '정답'
-                current_answer = {'answer': line, 'explanation': ''}
+                current_answer = {'answer': '', 'explanation': ''}
             elif current_section == '문제':
                 if line.startswith(('A)', 'B)', 'C)', 'D)')):
                     current_question['options'].append(line)
             elif current_section == '정답':
-                if not current_answer['explanation']:
-                    current_answer['explanation'] = line
-                else:
-                    current_answer['explanation'] += '\n' + line
+                if line.startswith('정답:'):
+                    current_answer['answer'] = line.replace('정답:', '').strip()
+                elif line.startswith('해설:'):
+                    current_answer['explanation'] = line.replace('해설:', '').strip()
         
-        # 마지막 문제 처리
-        if current_question and current_answer:
+        # 마지막 문제와 정답 처리
+        if current_question:
             questions.append(current_question)
+        if current_answer:
             answers.append(current_answer)
             
         return questions, answers
