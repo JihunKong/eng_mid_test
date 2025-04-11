@@ -49,20 +49,31 @@ class AIHelper:
         4. 문제, 보기, 정답, 해설은 모두 한국어로 작성해야 합니다.
 
         출력 형식:
-        [
-            {{
-                "question": "문제 내용 (예: 'Tom Michell은 어떤 일을 했나요?')",
-                "options": [
-                    "A) 보기 1 (예: '영어 교사')",
-                    "B) 보기 2 (예: '펭귄 연구가')",
-                    "C) 보기 3 (예: '동물원 관리인')",
-                    "D) 보기 4 (예: '해양 생물학자')"
-                ],
-                "answer": "정답 (예: 'A) 영어 교사')",
-                "explanation": "해설 (예: '지문 첫 번째 문단에 \"In the 1970s, he worked as an English teacher...\"라고 명시되어 있습니다.')"
-            }},
-            ...
-        ]
+        문제 1:
+        문제 내용
+        A) 보기 1
+        B) 보기 2
+        C) 보기 3
+        D) 보기 4
+
+        문제 2:
+        문제 내용
+        A) 보기 1
+        B) 보기 2
+        C) 보기 3
+        D) 보기 4
+
+        ...
+
+        정답 1:
+        정답
+        해설
+
+        정답 2:
+        정답
+        해설
+
+        ...
 
         지문:
         {text}
@@ -78,9 +89,9 @@ class AIHelper:
         )
         
         try:
-            return json.loads(response.content[0].text)
+            return response.content[0].text
         except:
-            return []
+            return ""
     
     def generate_sentence_rearrangement(self, text: str):
         prompt = f"""
