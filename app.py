@@ -9,6 +9,19 @@ import random
 import requests
 from datetime import datetime
 
+# WebSocket 설정
+st.set_page_config(
+    page_title="영어 학습 도우미",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/streamlit/streamlit/issues',
+        'Report a bug': 'https://github.com/streamlit/streamlit/issues',
+        'About': '영어 학습 도우미 v1.0'
+    }
+)
+
 def generate_fill_in_the_blank(text: str) -> Tuple[List[str], List[str]]:
     """빈칸 채우기 문제 생성"""
     result = call_ai_helper('generate_fill_in_blank', text)
@@ -103,19 +116,6 @@ def display_text_with_translation(text: str, translation: str):
         st.markdown(f"**{eng}**")
         st.markdown(f"*{kor}*")
         st.markdown("---")
-
-# WebSocket 설정
-st.set_page_config(
-    page_title="영어 학습 도우미",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://github.com/streamlit/streamlit/issues',
-        'Report a bug': 'https://github.com/streamlit/streamlit/issues',
-        'About': '영어 학습 도우미 v1.0'
-    }
-)
 
 # WebSocket 연결 상태 관리
 if 'websocket_connected' not in st.session_state:
@@ -224,149 +224,13 @@ def read_markdown_file(file_path):
         st.error(f"⚠️ 파일을 읽는 중 오류가 발생했습니다: {str(e)}")
         return None
 
-# 사이드바
-st.sidebar.title("📚 영어 학습 도우미")
-page = st.sidebar.radio(
-    "학습 모드 선택",
-    ["읽기 모드", "연습 모드", "테스트 모드", "학습 분석"]
-)
-
-# 메인 콘텐츠
-st.title("영어 학습 도우미")
-st.markdown("""
-    안녕하세요! 영어 학습을 도와드리는 AI 도우미입니다.
-    
-    이 앱은 다음과 같은 기능을 제공합니다:
-    1. 📖 읽기 모드: 마크다운 파일에서 영어 지문을 읽고 한국어 해석을 확인할 수 있습니다.
-    2. ✍️ 연습 모드: 다양한 유형의 연습 문제를 풀어볼 수 있습니다.
-    3. 📝 테스트 모드: 선택한 지문에 대한 테스트를 생성하고 풀어볼 수 있습니다.
-    4. 📊 학습 분석: 학습 진행 상황을 분석하고 피드백을 받을 수 있습니다.
-    
-    왼쪽 사이드바에서 원하는 학습 모드를 선택해주세요.
-""")
-
-if page == "읽기 모드":
-    st.header("📖 읽기 모드")
-    st.markdown("""
-        마크다운 파일에서 영어 지문을 읽고 한국어 해석을 확인할 수 있습니다.
-        아래에서 읽고 싶은 지문을 선택해주세요.
-    """)
-    
-    # 마크다운 파일 선택
-    selected_file = st.selectbox(
-        "지문 선택",
-        ["part1.md", "part2.md", "part3.md"]
-    )
-    
-    if selected_file:
-        content = read_markdown_file(selected_file)
-        english_text, korean_text = split_text_and_translation(content)
-        
-        if english_text and korean_text:
-            display_text_with_translation(english_text, korean_text)
-        else:
-            st.warning("선택한 파일에서 지문을 불러올 수 없습니다. 파일이 올바른 형식인지 확인해주세요.")
-    
-elif page == "연습 모드":
-    st.header("✍️ 연습 모드")
-    st.markdown("""
-        다양한 유형의 연습 문제를 풀어볼 수 있습니다.
-        아래에서 연습 유형을 선택해주세요.
-    """)
-    
-    exercise_type = st.selectbox(
-        "연습 유형 선택",
-        ["빈칸 채우기", "문장 재배열", "매칭 게임"]
-    )
-    
-    # 마크다운 파일 선택
-    selected_file = st.selectbox(
-        "연습을 위한 지문 선택",
-        ["part1.md", "part2.md", "part3.md"]
-    )
-    
-    if selected_file:
-        content = read_markdown_file(selected_file)
-        english_text, _ = split_text_and_translation(content)
-        
-        if english_text:
-            if exercise_type == "빈칸 채우기":
-                st.subheader("빈칸 채우기")
-                with st.spinner("문제를 생성 중입니다..."):
-                    try:
-                        questions, answers = generate_fill_in_the_blank(english_text)
-                        st.session_state['fill_in_blank_questions'] = questions
-                        st.session_state['fill_in_blank_answers'] = answers
-                        st.session_state['current_question'] = 0
-                        st.session_state['user_answers'] = [""] * len(questions)
-                        st.session_state['show_current_answer'] = False
-                    except Exception as e:
-                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
-            
-            elif exercise_type == "문장 재배열":
-                st.subheader("문장 재배열")
-                with st.spinner("문제를 생성 중입니다..."):
-                    try:
-                        questions = ai_helper.generate_sentence_rearrangement(english_text)
-                        st.write(questions)
-                    except Exception as e:
-                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
-            
-            elif exercise_type == "매칭 게임":
-                st.subheader("매칭 게임")
-                with st.spinner("문제를 생성 중입니다..."):
-                    try:
-                        questions = ai_helper.generate_matching_game(english_text)
-                        st.write(questions)
-                    except Exception as e:
-                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
-        else:
-            st.warning("선택한 파일에서 지문을 불러올 수 없습니다. 파일이 올바른 형식인지 확인해주세요.")
-    
-elif page == "테스트 모드":
-    st.header("📝 테스트 모드")
-    
-    # 마크다운 파일 선택
-    selected_file = st.selectbox(
-        "테스트를 위한 지문 선택",
-        ["part1.md", "part2.md", "part3.md"]
-    )
-    
-    if selected_file:
-        content = read_markdown_file(selected_file)
-        english_text, _ = split_text_and_translation(content)
-        
-        if english_text:
-            st.text_area("테스트 지문", english_text, height=200, disabled=True)
-            
-            difficulty = st.select_slider("난이도", options=["쉬움", "보통", "어려움"])
-            num_questions = st.slider("문제 수", min_value=3, max_value=10, value=5)
-            
-            if st.button("문제 생성"):
-                with st.spinner("문제를 생성 중입니다..."):
-                    try:
-                        questions = ai_helper.generate_questions(english_text, difficulty, num_questions)
-                        st.write(questions)
-                    except Exception as e:
-                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
-    
-# 푸터
-st.markdown("---")
-st.markdown("© 2025 완도고 2학년 영어 학습 도우미. All rights reserved.")
-
 def main():
-    st.set_page_config(page_title="영어 학습 도우미", layout="wide")
-    
-    # 세션 상태 초기화
-    if "page" not in st.session_state:
-        st.session_state.page = "home"
-    
-    # 소개
-    st.sidebar.title("영어 학습 도우미")
-    st.sidebar.markdown("영어 지문을 입력하고 다양한 학습 도구를 활용해보세요.")
-    
-    # 메뉴
-    menu = st.sidebar.radio("메뉴", ["홈", "문제 풀기", "빈칸 채우기", "단어 학습", "문장 재배열", "매칭 게임"])
+    # 사이드바
+    st.sidebar.title("📚 영어 학습 도우미")
+    menu = st.sidebar.radio(
+        "메뉴",
+        ["홈", "문제 풀기", "빈칸 채우기", "단어 학습", "문장 재배열", "매칭 게임"]
+    )
     
     # 선택한 메뉴에 따라 페이지 표시
     if menu == "홈":
@@ -557,31 +421,26 @@ def matching_game_page():
             st.markdown("## 매칭 게임")
             st.markdown(st.session_state.matching_game)
 
-def display_text_with_translation(text: str, translation: str):
-    """영어 지문과 번역을 나란히 표시"""
-    if not text or not translation:
-        return
-    
-    # 줄 단위로 분리
-    text_lines = [line for line in text.split('\n') if line.strip()]
-    translation_lines = [line for line in translation.split('\n') if line.strip()]
-    
-    # 최대 라인 수 계산
-    max_lines = max(len(text_lines), len(translation_lines))
-    
-    # 번역이 부족한 경우 빈 줄 추가
-    if len(text_lines) > len(translation_lines):
-        translation_lines.extend([''] * (len(text_lines) - len(translation_lines)))
-    # 원문이 부족한 경우 빈 줄 추가
-    elif len(translation_lines) > len(text_lines):
-        text_lines.extend([''] * (len(translation_lines) - len(text_lines)))
-    
-    # 표시할 텍스트 구성
-    display_text = ""
-    for i in range(max_lines):
-        display_text += f"{text_lines[i]}\n{translation_lines[i]}\n\n"
-    
-    st.markdown(display_text)
+def read_file(uploaded_file):
+    """업로드된 파일 읽기"""
+    try:
+        # 파일 확장자 확인
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        
+        # txt 파일
+        if file_extension == 'txt':
+            return uploaded_file.getvalue().decode('utf-8')
+        # 다른 형식의 파일은 현재 지원하지 않음
+        else:
+            st.error(f"{file_extension} 형식의 파일은 현재 지원하지 않습니다.")
+            return None
+    except Exception as e:
+        st.error(f"파일을 읽는 중 오류가 발생했습니다: {str(e)}")
+        return None
+
+# 푸터
+st.markdown("---")
+st.markdown("© 2025 완도고 2학년 영어 학습 도우미. All rights reserved.")
 
 if __name__ == "__main__":
     main() 
