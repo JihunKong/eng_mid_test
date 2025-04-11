@@ -36,20 +36,60 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
     except:
         return [], []
 
-def display_questions(questions: List[Dict[str, str]], answers: List[str], user_answers: List[str]):
-    """문제와 답안을 표시"""
-    st.markdown("### 문제")
-    for i, question in enumerate(questions, 1):
-        st.markdown(f"**{i}. {question['blank']}**")
-        st.markdown("")
+def display_questions(questions_text):
+    if not questions_text:
+        return
     
-    st.markdown("---")
-    st.markdown("### 답안")
-    for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, answers), 1):
-        st.markdown(f"**{i}. {question['blank']}**")
-        st.markdown(f"내 답: {user_answer}")
-        st.markdown(f"정답: {correct_answer}")
-        st.markdown("")
+    # 문제와 해설을 분리
+    questions = []
+    answers = []
+    
+    current_section = None
+    current_content = []
+    
+    for line in questions_text.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith('문제'):
+            if current_section and current_content:
+                if current_section == '문제':
+                    questions.append('\n'.join(current_content))
+                elif current_section == '정답':
+                    answers.append('\n'.join(current_content))
+            current_section = '문제'
+            current_content = [line]
+        elif line.startswith('정답'):
+            if current_section and current_content:
+                if current_section == '문제':
+                    questions.append('\n'.join(current_content))
+                elif current_section == '정답':
+                    answers.append('\n'.join(current_content))
+            current_section = '정답'
+            current_content = [line]
+        else:
+            current_content.append(line)
+    
+    # 마지막 섹션 처리
+    if current_section and current_content:
+        if current_section == '문제':
+            questions.append('\n'.join(current_content))
+        elif current_section == '정답':
+            answers.append('\n'.join(current_content))
+    
+    # 문제 표시
+    st.subheader("문제")
+    for i, question in enumerate(questions, 1):
+        st.markdown(f"**{question}**")
+        st.markdown("---")
+    
+    # 정답 확인 버튼
+    if st.button("답안 확인"):
+        st.subheader("정답 및 해설")
+        for i, answer in enumerate(answers, 1):
+            st.markdown(f"**{answer}**")
+            st.markdown("---")
 
 def display_text_with_translation(text: str, translation: str):
     """텍스트와 번역을 줄바꿈 기준으로 번갈아가며 표시"""
