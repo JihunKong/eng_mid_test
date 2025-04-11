@@ -21,7 +21,7 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
         
         for item in result:
             # 문제 형식 변경
-            question_text = item["original"]
+            question_text = item["question"]
             options = item.get("options", [])
             explanation = item.get("explanation", "")
             
