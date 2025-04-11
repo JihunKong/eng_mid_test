@@ -357,7 +357,9 @@ def main():
         for i, question in enumerate(questions):
             st.markdown(f"**문제 {i + 1}**")
             st.markdown(f"{question['original']}")
-            st.markdown(f"빈칸: {question['blank']}")
+            st.markdown("")
+            for option in question['options']:
+                st.markdown(option)
             st.markdown("")
             user_answers[i] = st.text_input(f"답을 입력하세요 (문제 {i + 1}):", key=f"answer_{i}")
             st.markdown("---")
@@ -370,8 +372,7 @@ def main():
         if st.session_state.get('show_answers', False):
             st.markdown("### 답과 해설")
             for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
-                st.markdown(f"**답과 해설 {i + 1}**")
-                st.markdown(f"내 답: {user_answer}")
+                st.markdown(f"**{i + 1}번 정답 및 해설**")
                 st.markdown(f"정답: {correct_answer}")
                 st.markdown(f"해설: {question.get('explanation', '해설이 없습니다.')}")
                 st.markdown("---")
