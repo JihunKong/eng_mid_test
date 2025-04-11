@@ -35,8 +35,6 @@
 ### 설치 방법
 ```bash
 # 저장소 클론
-git clone https://github.com/yourusername/english-learning-assistant.git
-cd english-learning-assistant
 
 # 필요한 패키지 설치
 pip install -r requirements.txt
@@ -59,8 +57,6 @@ streamlit run app.py
 앱을 실행하기 전에 다음 환경 변수를 설정해야 합니다:
 
 - `ANTHROPIC_API_KEY`: Anthropic의 API 키 (Claude 3.7 Sonnet 사용을 위해 필요)
-- `STREAMLIT_SERVER_PORT`: (선택) 서버 포트 지정 (기본값: 8501)
-- `STREAMLIT_SERVER_HEADLESS`: (선택) 헤드리스 모드 실행 시 'true'로 설정
 
 ### .streamlit/secrets.toml 파일 설정
 ```toml
