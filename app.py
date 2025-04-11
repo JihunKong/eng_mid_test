@@ -355,71 +355,233 @@ st.markdown("---")
 st.markdown("© 2025 완도고 2학년 영어 학습 도우미. All rights reserved.")
 
 def main():
-    # ... (기존 코드 유지) ...
+    st.set_page_config(page_title="영어 학습 도우미", layout="wide")
     
-    if page == "읽기":
-        if selected_file:
-            text, translation = load_markdown_file(selected_file)
-            if text and translation:
-                display_text_with_translation(text, translation)
+    # 세션 상태 초기화
+    if "page" not in st.session_state:
+        st.session_state.page = "home"
     
-    # ... (기존 코드 유지) ...
+    # 소개
+    st.sidebar.title("영어 학습 도우미")
+    st.sidebar.markdown("영어 지문을 입력하고 다양한 학습 도구를 활용해보세요.")
     
-    elif page == "빈칸 채우기":
-        if selected_file:
-            text, _ = load_markdown_file(selected_file)
-            if text:
-                try:
-                    questions, answers = generate_fill_in_the_blank(text)
-                    if questions and answers:
-                        st.session_state['fill_in_blank_questions'] = questions
-                        st.session_state['fill_in_blank_answers'] = answers
-                        st.session_state['user_answers'] = [""] * len(questions)
-                    else:
-                        st.error("⚠️ 문제를 생성할 수 없습니다. 텍스트를 다시 확인해주세요.")
-                except Exception as e:
-                    st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
+    # 메뉴
+    menu = st.sidebar.radio("메뉴", ["홈", "문제 풀기", "빈칸 채우기", "단어 학습", "문장 재배열", "매칭 게임"])
+    
+    # 선택한 메뉴에 따라 페이지 표시
+    if menu == "홈":
+        home_page()
+    elif menu == "문제 풀기":
+        quiz_page()
+    elif menu == "빈칸 채우기":
+        fill_in_blank_page()
+    elif menu == "단어 학습":
+        vocabulary_page()
+    elif menu == "문장 재배열":
+        sentence_rearrangement_page()
+    elif menu == "매칭 게임":
+        matching_game_page()
+
+def home_page():
+    """홈 페이지"""
+    st.title("영어 학습 도우미")
+    st.markdown("""
+    안녕하세요! 영어 학습 도우미에 오신 것을 환영합니다.
+    
+    이 애플리케이션은 영어 학습을 도와주는 다양한 기능을 제공합니다:
+    
+    1. **문제 풀기**: 영어 지문을 바탕으로 다양한 문제를 풀어볼 수 있습니다.
+    2. **빈칸 채우기**: 영어 지문에서 빈칸을 채우는 연습을 할 수 있습니다.
+    3. **단어 학습**: 중요한 단어들을 학습할 수 있습니다.
+    4. **문장 재배열**: 문장의 순서를 맞추는 연습을 할 수 있습니다.
+    5. **매칭 게임**: 단어와 의미를 매칭하는 게임을 할 수 있습니다.
+    
+    왼쪽 사이드바에서 원하는 기능을 선택하세요!
+    """)
+
+def quiz_page():
+    """문제 풀기 페이지"""
+    st.title("문제 풀기")
+    
+    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    
+    if uploaded_file:
+        text = read_file(uploaded_file)
         
-        # 세션 상태 초기화 확인
-        if 'fill_in_blank_questions' not in st.session_state:
-            st.session_state['fill_in_blank_questions'] = []
-            st.session_state['fill_in_blank_answers'] = []
-            st.session_state['user_answers'] = []
-        
-        questions = st.session_state['fill_in_blank_questions']
-        user_answers = st.session_state['user_answers']
-        
-        if not questions:
-            st.info("📝 파일을 선택하고 문제를 생성해주세요.")
+        if not text:
+            st.error("파일을 읽을 수 없습니다.")
             return
-            
-        # 문제 표시
-        st.markdown("### 문제")
-        for i, question in enumerate(questions):
-            st.markdown(f"**문제 {i + 1}**")
-            st.markdown(question)
-            st.markdown("")
-            user_answers[i] = st.text_input(f"답을 입력하세요 (문제 {i + 1}):", key=f"answer_{i}")
-            st.markdown("---")
         
-        # 답안 확인 버튼
-        if st.button("답안 확인"):
-            st.session_state['show_answers'] = True
+        # 난이도 선택
+        difficulty = st.selectbox("문제 난이도 선택", ["쉬움", "보통", "어려움"])
+        
+        # 문제 생성 버튼
+        if st.button("문제 생성"):
+            with st.spinner("문제를 생성 중입니다..."):
+                difficulty_eng = {"쉬움": "easy", "보통": "medium", "어려움": "hard"}
+                questions = call_ai_helper('generate_questions', text, difficulty_eng[difficulty])
+                
+                if questions:
+                    st.session_state.questions = questions
+                    st.success("문제가 생성되었습니다!")
+                else:
+                    st.error("문제를 생성할 수 없습니다.")
+        
+        # 문제 표시
+        if 'questions' in st.session_state:
+            st.markdown("## 문제")
+            st.markdown(st.session_state.questions)
+
+def fill_in_blank_page():
+    """빈칸 채우기 문제 페이지"""
+    st.title("빈칸 채우기 문제")
+    
+    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    
+    if uploaded_file:
+        text = read_file(uploaded_file)
+        
+        if not text:
+            st.error("파일을 읽을 수 없습니다.")
+            return
+        
+        # 문제 생성
+        if st.button("문제 생성"):
+            with st.spinner("문제를 생성 중입니다..."):
+                questions_text = call_ai_helper('generate_fill_in_blank', text)
+                if not questions_text:
+                    st.error("문제를 생성할 수 없습니다.")
+                    return
+                    
+                # 문제와 해설 분리
+                split_text = questions_text.split("해설:")
+                if len(split_text) != 2:
+                    st.error("문제와 해설을 분리할 수 없습니다.")
+                    return
+                    
+                st.session_state.questions_section = split_text[0].strip()
+                st.session_state.explanations_section = "해설:" + split_text[1].strip()
+                st.success("문제가 생성되었습니다!")
+        
+        # 문제 표시
+        if 'questions_section' in st.session_state:
+            st.markdown("## 문제")
+            st.markdown(st.session_state.questions_section)
             
-        # 답과 해설 표시
-        if st.session_state.get('show_answers', False):
-            st.markdown("### 답과 해설")
-            for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
-                st.markdown(f"**{i + 1}번 정답 및 해설**")
-                st.markdown(f"정답: {correct_answer}")
-                st.markdown(f"해설: {question}")
-                st.markdown("---")
-            
-            # 다시 풀기 버튼
-            if st.button("다시 풀기"):
-                st.session_state['user_answers'] = [""] * len(questions)
-                st.session_state['show_answers'] = False
-                st.experimental_rerun()
+            # 해설 표시 (버튼 클릭 시)
+            if st.button("답안 확인"):
+                st.markdown("## 해설")
+                st.markdown(st.session_state.explanations_section)
+
+def vocabulary_page():
+    """단어 학습 페이지"""
+    st.title("단어 학습")
+    
+    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    
+    if uploaded_file:
+        text = read_file(uploaded_file)
+        
+        if not text:
+            st.error("파일을 읽을 수 없습니다.")
+            return
+        
+        # 단어 입력
+        word = st.text_input("학습할 단어를 입력하세요")
+        
+        if word and st.button("단어 설명 보기"):
+            with st.spinner("단어 정보를 가져오는 중입니다..."):
+                explanation = call_ai_helper('explain_vocabulary', word, text)
+                
+                if explanation:
+                    st.markdown("## 단어 설명")
+                    st.markdown(explanation)
+                else:
+                    st.error("단어 정보를 가져올 수 없습니다.")
+
+def sentence_rearrangement_page():
+    """문장 재배열 페이지"""
+    st.title("문장 재배열")
+    
+    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    
+    if uploaded_file:
+        text = read_file(uploaded_file)
+        
+        if not text:
+            st.error("파일을 읽을 수 없습니다.")
+            return
+        
+        # 문제 생성
+        if st.button("문제 생성"):
+            with st.spinner("문제를 생성 중입니다..."):
+                questions = call_ai_helper('generate_sentence_rearrangement', text)
+                
+                if questions:
+                    st.session_state.rearrangement_questions = questions
+                    st.success("문제가 생성되었습니다!")
+                else:
+                    st.error("문제를 생성할 수 없습니다.")
+        
+        # 문제 표시
+        if 'rearrangement_questions' in st.session_state:
+            st.markdown("## 문장 재배열 문제")
+            st.markdown(st.session_state.rearrangement_questions)
+
+def matching_game_page():
+    """매칭 게임 페이지"""
+    st.title("매칭 게임")
+    
+    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    
+    if uploaded_file:
+        text = read_file(uploaded_file)
+        
+        if not text:
+            st.error("파일을 읽을 수 없습니다.")
+            return
+        
+        # 게임 생성
+        if st.button("게임 생성"):
+            with st.spinner("게임을 생성 중입니다..."):
+                game = call_ai_helper('generate_matching_game', text)
+                
+                if game:
+                    st.session_state.matching_game = game
+                    st.success("게임이 생성되었습니다!")
+                else:
+                    st.error("게임을 생성할 수 없습니다.")
+        
+        # 게임 표시
+        if 'matching_game' in st.session_state:
+            st.markdown("## 매칭 게임")
+            st.markdown(st.session_state.matching_game)
+
+def display_text_with_translation(text: str, translation: str):
+    """영어 지문과 번역을 나란히 표시"""
+    if not text or not translation:
+        return
+    
+    # 줄 단위로 분리
+    text_lines = [line for line in text.split('\n') if line.strip()]
+    translation_lines = [line for line in translation.split('\n') if line.strip()]
+    
+    # 최대 라인 수 계산
+    max_lines = max(len(text_lines), len(translation_lines))
+    
+    # 번역이 부족한 경우 빈 줄 추가
+    if len(text_lines) > len(translation_lines):
+        translation_lines.extend([''] * (len(text_lines) - len(translation_lines)))
+    # 원문이 부족한 경우 빈 줄 추가
+    elif len(translation_lines) > len(text_lines):
+        text_lines.extend([''] * (len(translation_lines) - len(text_lines)))
+    
+    # 표시할 텍스트 구성
+    display_text = ""
+    for i in range(max_lines):
+        display_text += f"{text_lines[i]}\n{translation_lines[i]}\n\n"
+    
+    st.markdown(display_text)
 
 if __name__ == "__main__":
     main() 
