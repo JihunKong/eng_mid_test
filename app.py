@@ -3,7 +3,6 @@ from modules.ai_helper import AIHelper
 import os
 import re
 import time
-import openai
 import json
 from typing import Tuple, List, Dict, Optional
 import random
@@ -47,12 +46,6 @@ if not api_key:
     st.error("⚠️ API 키가 설정되지 않았습니다. 환경 변수에 ANTHROPIC_API_KEY를 설정해주세요.")
     st.stop()
 
-# API 키 설정
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-if not OPENAI_API_KEY:
-    st.error("API 키가 설정되지 않았습니다. 환경 변수 OPENAI_API_KEY를 설정해주세요.")
-    st.stop()
-
 # AI 도우미 초기화
 @st.cache_resource
 def get_ai_helper():
@@ -65,16 +58,11 @@ def get_ai_helper():
 ai_helper = get_ai_helper()
 
 # API 호출 함수에 재시도 로직 추가
-def call_openai_api(messages, max_retries=3, retry_delay=5):
+def call_ai_helper(method, *args, max_retries=3, retry_delay=5):
     for attempt in range(max_retries):
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1000
-            )
-            return response
+            result = getattr(ai_helper, method)(*args)
+            return result
         except Exception as e:
             if attempt < max_retries - 1:
                 st.warning(f"API 호출 실패 (시도 {attempt + 1}/{max_retries}). {retry_delay}초 후 재시도합니다...")
@@ -286,17 +274,11 @@ def display_text_with_translation(text: str, translation: str):
 
 def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
     """빈칸 채우기 문제 생성"""
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant that creates fill-in-the-blank questions."},
-        {"role": "user", "content": f"Create 5 fill-in-the-blank questions from this text. For each question, provide the original sentence, the sentence with a blank (replace a key word with '_____'), and the answer. Format as JSON:\n\n{text}"}
-    ]
-    
-    response = call_openai_api(messages)
-    if not response:
+    result = call_ai_helper('generate_fill_in_blank', text)
+    if not result:
         return [], []
         
     try:
-        result = json.loads(response.choices[0].message.content)
         questions = []
         answers = []
         
