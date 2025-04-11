@@ -5,7 +5,11 @@ class AIHelper:
     def __init__(self, api_key: str):
         if not api_key:
             raise ValueError("API 키가 제공되지 않았습니다.")
-        self.client = Anthropic(api_key=api_key)
+        try:
+            self.client = Anthropic()
+            self.client.api_key = api_key
+        except Exception as e:
+            raise ValueError(f"Anthropic 클라이언트 초기화 실패: {str(e)}")
         self.model = "claude-3-7-sonnet-20250219"
     
     def generate_questions(self, text: str, difficulty: str = "medium", num_questions: int = 5) -> str:
@@ -21,14 +25,17 @@ class AIHelper:
         - 정답 및 해설
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=2000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.content[0].text
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.content[0].text
+        except Exception as e:
+            raise ValueError(f"문제 생성 중 오류 발생: {str(e)}")
     
     def explain_vocabulary(self, word: str, context: str) -> str:
         """단어 설명 및 예문 제공"""
@@ -43,14 +50,17 @@ class AIHelper:
         3. 예문 2개
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.content[0].text
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.content[0].text
+        except Exception as e:
+            raise ValueError(f"단어 설명 생성 중 오류 발생: {str(e)}")
     
     def provide_feedback(self, student_answer: str, correct_answer: str) -> str:
         """학생 답변에 대한 피드백 제공"""
@@ -67,14 +77,17 @@ class AIHelper:
         4. 추가 학습 팁
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.content[0].text
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.content[0].text
+        except Exception as e:
+            raise ValueError(f"피드백 생성 중 오류 발생: {str(e)}")
     
     def generate_similar_examples(self, expression: str) -> str:
         """유사 표현 및 예문 생성"""
@@ -88,11 +101,14 @@ class AIHelper:
         3. 사용 시 주의사항
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.content[0].text 
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.content[0].text
+        except Exception as e:
+            raise ValueError(f"유사 예문 생성 중 오류 발생: {str(e)}") 
