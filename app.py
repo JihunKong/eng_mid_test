@@ -9,6 +9,42 @@ import random
 import requests
 from datetime import datetime
 
+def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
+    """빈칸 채우기 문제 생성"""
+    result = call_ai_helper('generate_fill_in_blank', text)
+    if not result:
+        return [], []
+        
+    try:
+        questions = []
+        answers = []
+        
+        for item in result:
+            questions.append({
+                "original": item["original"],
+                "blank": item["blank"]
+            })
+            answers.append(item["answer"])
+            
+        return questions, answers
+    except:
+        return [], []
+
+def display_questions(questions: List[Dict[str, str]], answers: List[str], user_answers: List[str]):
+    """문제와 답안을 표시"""
+    st.markdown("### 문제")
+    for i, question in enumerate(questions, 1):
+        st.markdown(f"**{i}. {question['blank']}**")
+        st.markdown("")
+    
+    st.markdown("---")
+    st.markdown("### 답안")
+    for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, answers), 1):
+        st.markdown(f"**{i}. {question['blank']}**")
+        st.markdown(f"내 답: {user_answer}")
+        st.markdown(f"정답: {correct_answer}")
+        st.markdown("")
+
 def display_text_with_translation(text: str, translation: str):
     """텍스트와 번역을 줄바꿈 기준으로 번갈아가며 표시"""
     # 줄바꿈을 기준으로 문장 분리
@@ -281,42 +317,6 @@ elif page == "학습 분석":
 st.markdown("---")
 st.markdown("© 2024 영어 학습 도우미. All rights reserved.")
 
-def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
-    """빈칸 채우기 문제 생성"""
-    result = call_ai_helper('generate_fill_in_blank', text)
-    if not result:
-        return [], []
-        
-    try:
-        questions = []
-        answers = []
-        
-        for item in result:
-            questions.append({
-                "original": item["original"],
-                "blank": item["blank"]
-            })
-            answers.append(item["answer"])
-            
-        return questions, answers
-    except:
-        return [], []
-
-def display_questions(questions: List[Dict[str, str]], answers: List[str], user_answers: List[str]):
-    """문제와 답안을 표시"""
-    st.markdown("### 문제")
-    for i, question in enumerate(questions, 1):
-        st.markdown(f"**{i}. {question['blank']}**")
-        st.markdown("")
-    
-    st.markdown("---")
-    st.markdown("### 답안")
-    for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, answers), 1):
-        st.markdown(f"**{i}. {question['blank']}**")
-        st.markdown(f"내 답: {user_answer}")
-        st.markdown(f"정답: {correct_answer}")
-        st.markdown("")
-
 def main():
     # ... (기존 코드 유지) ...
     
@@ -336,7 +336,6 @@ def main():
                 if questions:
                     st.session_state['fill_in_blank_questions'] = questions
                     st.session_state['fill_in_blank_answers'] = answers
-                    st.session_state['current_question'] = 0
                     st.session_state['user_answers'] = [""] * len(questions)
                     st.session_state['show_answers'] = False
                 
@@ -345,9 +344,12 @@ def main():
             user_answers = st.session_state['user_answers']
             
             # 모든 문제 표시
+            st.markdown("### 문제")
             for i, question in enumerate(questions):
                 st.markdown(f"**{i + 1}. {question['original']}**")
+                st.markdown("")
                 st.markdown(f"빈칸: {question['blank']}")
+                st.markdown("")
                 user_answers[i] = st.text_input(f"답을 입력하세요 (문제 {i + 1}):", key=f"answer_{i}")
                 st.markdown("---")
             
@@ -358,7 +360,9 @@ def main():
                 st.markdown("### 답안")
                 for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
                     st.markdown(f"**{i + 1}. {question['original']}**")
+                    st.markdown("")
                     st.markdown(f"빈칸: {question['blank']}")
+                    st.markdown("")
                     st.markdown(f"내 답: {user_answer}")
                     st.markdown(f"정답: {correct_answer}")
                     st.markdown("---") 
