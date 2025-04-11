@@ -23,7 +23,7 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
             questions.append({
                 "original": item["original"],
                 "blank": item["blank"],
-                "explanation": item.get("explanation", "")  # 해설 추가
+                "explanation": item.get("explanation", "")
             })
             answers.append(item["answer"])
             
@@ -335,7 +335,7 @@ def main():
             if text:
                 try:
                     questions, answers = generate_fill_in_the_blank(text)
-                    if questions and answers:  # 문제와 답이 모두 있는지 확인
+                    if questions and answers:
                         st.session_state['fill_in_blank_questions'] = questions
                         st.session_state['fill_in_blank_answers'] = answers
                         st.session_state['current_question'] = 0
@@ -365,7 +365,9 @@ def main():
         # 현재 문제 표시
         if current_question < len(questions):
             question = questions[current_question]
-            st.markdown(f"### 문제 {current_question + 1}/{len(questions)}")
+            
+            # 문제 표시
+            st.markdown("### 문제")
             st.markdown(f"**{question['original']}**")
             st.markdown("")
             st.markdown(f"빈칸: {question['blank']}")
@@ -382,6 +384,7 @@ def main():
             
             # 정답과 해설 표시
             if st.session_state['show_current_answer']:
+                st.markdown("---")
                 st.markdown("### 정답")
                 st.markdown(f"**{st.session_state['fill_in_blank_answers'][current_question]}**")
                 st.markdown("")
