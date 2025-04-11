@@ -190,21 +190,23 @@ def fill_in_blank_page():
                         parts = result.split('해설:')
                         if len(parts) == 2:
                             questions = parts[0].strip()
-                            explanations = '해설:' + parts[1].strip()
+                            explanations = '해설:\n\n' + parts[1].strip()
                             
                             st.session_state.questions = questions
                             st.session_state.explanations = explanations
+                            st.success("문제가 생성되었습니다!")
                         else:
                             st.error("문제와 해설을 분리할 수 없습니다.")
                     else:
                         st.error("문제를 생성할 수 없습니다.")
             
-            # 문제와 해설 표시
+            # 문제와 해설 표시 - 항상 완전히 분리
             if 'questions' in st.session_state:
                 st.markdown("## 문제")
                 st.markdown(st.session_state.questions)
                 
-                if st.button("답안 확인"):
+                # 해설은 버튼 클릭 시에만 표시
+                if st.button("답안 확인", key="answers_button"):
                     st.markdown("## 해설")
                     st.markdown(st.session_state.explanations)
 

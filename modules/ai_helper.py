@@ -42,59 +42,68 @@ class AIHelper:
         prompt = f"""
         다음 영어 지문을 바탕으로 객관식 문제 5개를 생성해주세요.
         
-        문제 생성 규칙:
-        1. 각 문제는 지문의 핵심 내용을 정확하게 묻는 질문이어야 합니다.
-        2. 보기는 4개이며, 정답은 지문에서 직접적으로 언급된 내용이어야 합니다.
-        3. 해설은 지문의 구체적인 부분을 인용하여 설명해야 합니다.
-        4. 문제, 보기, 정답, 해설은 모두 한국어로 작성해야 합니다.
-
+        반드시 문제 부분과 해설 부분을 완전히 분리해서 작성해주세요.
+        문제 모두 먼저 작성하고, 그 다음에 해설 모두를 작성해주세요.
+        
         출력 형식:
         문제:
-        1. 문제 내용
+        
+        문제 1
+        문제 내용
         A) 보기 1
         B) 보기 2
         C) 보기 3
         D) 보기 4
-
-        2. 문제 내용
+        
+        문제 2
+        문제 내용
         A) 보기 1
         B) 보기 2
         C) 보기 3
         D) 보기 4
-
-        3. 문제 내용
+        
+        문제 3
+        문제 내용
         A) 보기 1
         B) 보기 2
         C) 보기 3
         D) 보기 4
-
-        4. 문제 내용
+        
+        문제 4
+        문제 내용
         A) 보기 1
         B) 보기 2
         C) 보기 3
         D) 보기 4
-
-        5. 문제 내용
+        
+        문제 5
+        문제 내용
         A) 보기 1
         B) 보기 2
         C) 보기 3
         D) 보기 4
-
+        
         해설:
-        1. 정답: A) 보기 1
-        해설: 지문의 구체적인 부분을 인용하여 설명
-
-        2. 정답: B) 보기 2
-        해설: 지문의 구체적인 부분을 인용하여 설명
-
-        3. 정답: C) 보기 3
-        해설: 지문의 구체적인 부분을 인용하여 설명
-
-        4. 정답: D) 보기 4
-        해설: 지문의 구체적인 부분을 인용하여 설명
-
-        5. 정답: A) 보기 1
-        해설: 지문의 구체적인 부분을 인용하여 설명
+        
+        문제 1
+        정답: 정답
+        해설: 해설
+        
+        문제 2
+        정답: 정답
+        해설: 해설
+        
+        문제 3
+        정답: 정답
+        해설: 해설
+        
+        문제 4
+        정답: 정답
+        해설: 해설
+        
+        문제 5
+        정답: 정답
+        해설: 해설
 
         지문:
         {text}
@@ -103,7 +112,7 @@ class AIHelper:
         response = self.client.messages.create(
             model=self.model,
             max_tokens=4000,
-            system="You are an English teacher creating multiple-choice questions. You must create questions that test comprehension of the text, with clear correct answers and detailed explanations. Questions and answers must be completely separated.",
+            system="You are an English teacher creating multiple-choice questions based on the text. Always provide all QUESTIONS first, then all ANSWERS and EXPLANATIONS separately. Never mix them. Use Korean for all content.",
             messages=[
                 {"role": "user", "content": prompt}
             ]
