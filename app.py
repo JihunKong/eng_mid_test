@@ -83,13 +83,17 @@ def split_text_and_translation(content):
             continue
             
         # 한국어 해석 시작 표시
-        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다'):
+        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다') or line.strip().startswith('그날 있었던 일들은'):
             is_english = False
             
         if is_english:
             english_text.append(line)
         else:
             korean_text.append(line)
+    
+    # 빈 줄 제거
+    english_text = [line for line in english_text if line.strip()]
+    korean_text = [line for line in korean_text if line.strip()]
     
     return '\n'.join(english_text), '\n'.join(korean_text)
 

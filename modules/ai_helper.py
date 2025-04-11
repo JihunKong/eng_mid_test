@@ -8,11 +8,10 @@ class AIHelper:
         if not api_key:
             raise ValueError("API 키가 제공되지 않았습니다.")
         try:
-            self.client = Anthropic()
-            self.client.api_key = api_key
+            self.client = anthropic.Anthropic(api_key=api_key)
+            self.model = "claude-3-7-sonnet-20250219"
         except Exception as e:
             raise ValueError(f"Anthropic 클라이언트 초기화 실패: {str(e)}")
-        self.model = "claude-3-7-sonnet-20250219"
     
     def generate_questions(self, text: str, difficulty: str = "medium", num_questions: int = 5) -> str:
         """지문 기반 문제 생성"""
@@ -29,9 +28,8 @@ class AIHelper:
         """
         
         response = self.client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model=self.model,
             max_tokens=4000,
-            temperature=0.7,
             system="You are an English teacher creating test questions.",
             messages=[
                 {"role": "user", "content": prompt}
@@ -53,9 +51,8 @@ class AIHelper:
         """
         
         response = self.client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model=self.model,
             max_tokens=4000,
-            temperature=0.7,
             system="You are an English teacher creating fill-in-the-blank exercises.",
             messages=[
                 {"role": "user", "content": prompt}
@@ -77,9 +74,8 @@ class AIHelper:
         """
         
         response = self.client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model=self.model,
             max_tokens=4000,
-            temperature=0.7,
             system="You are an English teacher creating sentence rearrangement exercises.",
             messages=[
                 {"role": "user", "content": prompt}
@@ -101,9 +97,8 @@ class AIHelper:
         """
         
         response = self.client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model=self.model,
             max_tokens=4000,
-            temperature=0.7,
             system="You are an English teacher creating matching game exercises.",
             messages=[
                 {"role": "user", "content": prompt}
