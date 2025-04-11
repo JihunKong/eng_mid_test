@@ -16,8 +16,7 @@ I had never had the opportunity to study a penguin in the water before. I was fa
 
 I was astonished. He had never gone near the pool before. I was not even sure if he could swim.
 “The water is cold, and it’s getting late. Are you sure you want to go in?”
-I asked.
-“Please!”
+I asked. “Please!”
 “All right then,” I said, “but be quick!”
 I had never seen him so excited before. His eyes were shining with joy, and he seemed to be truly alive for the first time. Without hesitating, he dived into the cold water. I was ready to jump in and rescue him if he could not swim.
 
