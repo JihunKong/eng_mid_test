@@ -443,7 +443,7 @@ def quiz_page():
                             
                             if st.button("제출"):
                                 st.session_state.show_explanation = True
-                                st.experimental_rerun()
+                                st.rerun()
                         
                         # 해설 표시
                         if st.session_state.show_explanation:
@@ -496,7 +496,7 @@ def quiz_page():
                                     st.session_state.current_question = None
                                     st.session_state.selected_answer = None
                                     st.session_state.show_explanation = False
-                                    st.experimental_rerun()
+                                    st.rerun()
                             
                             with col2:
                                 if st.button("학습 종료"):
@@ -508,7 +508,7 @@ def quiz_page():
                                     st.session_state.selected_answer = None
                                     st.session_state.show_explanation = False
                                     st.session_state.result_summary = f"총 {total}개의 문제를 풀었습니다."
-                                    st.experimental_rerun()
+                                    st.rerun()
                     except Exception as e:
                         st.error(f"문제 표시 중 오류가 발생했습니다: {str(e)}")
                         st.session_state.current_question = None
@@ -525,7 +525,7 @@ def quiz_page():
                             if key in st.session_state:
                                 del st.session_state[key]
                         st.session_state.current_question_type = "comprehension"
-                        st.experimental_rerun()
+                        st.rerun()
 
 if __name__ == "__main__":
     main() 
