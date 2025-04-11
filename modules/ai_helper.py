@@ -108,38 +108,61 @@ class AIHelper:
         {text}
         """
         
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=2000,
-            system="You are an English teacher creating multiple-choice questions for high school students. Create ONE question at a time. Return your response in valid JSON format. Use Korean for question content and explanations.",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
+        # import 문을 함수 맨 위로 이동
+        import re
+        import json
         
         try:
-            # JSON 응답 찾기 (중괄호로 둘러싸인 부분)
-            import re
-            import json
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                system="You are an English teacher creating multiple-choice questions for high school students. Create ONE question at a time. Return your response in valid JSON format. Use Korean for question content and explanations.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
             
+            # 응답 처리
             content = response.content[0].text
+            
+            # JSON 응답 찾기 (중괄호로 둘러싸인 부분)
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
             
             if json_match:
                 json_str = json_match.group(0)
-                return json.loads(json_str)
+                try:
+                    question_data = json.loads(json_str)
+                    
+                    # 필수 필드 검사
+                    required_fields = ["question", "options", "answer", "explanation"]
+                    for field in required_fields:
+                        if field not in question_data:
+                            question_data[field] = field + " 필드가 누락되었습니다" if field == "question" or field == "explanation" else []
+                    
+                    # options가 리스트인지 확인
+                    if not isinstance(question_data["options"], list) or len(question_data["options"]) < 1:
+                        question_data["options"] = ["A) 옵션 데이터가 올바르지 않습니다"]
+                    
+                    return question_data
+                except json.JSONDecodeError as e:
+                    return {
+                        "question": "JSON 형식 오류가 발생했습니다",
+                        "options": ["A) JSON 파싱 오류: " + str(e)[:100]],
+                        "answer": "A",
+                        "explanation": "JSON 형식이 올바르지 않습니다. 다시 시도해주세요."
+                    }
             else:
                 # JSON이 아닌 경우 응답 구조화 시도
                 return {
-                    "question": content,
-                    "options": ["A) 답변이 올바른 형식으로 제공되지 않았습니다"],
+                    "question": "응답이 JSON 형식이 아닙니다",
+                    "options": ["A) JSON 형식이 아님: " + content[:50] + "..."],
                     "answer": "A",
-                    "explanation": "응답 형식 오류"
+                    "explanation": "응답 형식 오류. 다시 시도해주세요."
                 }
         except Exception as e:
             return {
                 "question": "문제 생성 중 오류가 발생했습니다",
-                "options": [f"A) 오류: {str(e)}"],
+                "options": ["A) 오류: " + str(e)[:100]],
                 "answer": "A",
-                "explanation": "응답 처리 오류"
+                "explanation": "응답 처리 오류. 다시 시도해주세요."
             } 

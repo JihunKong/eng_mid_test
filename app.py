@@ -287,8 +287,18 @@ def quiz_page():
                     # 선택지 표시 (라디오 버튼)
                     options = question_data.get('options', [])
                     option_texts = []
+                    
+                    # 옵션이 비어있거나 리스트가 아닌 경우 처리
+                    if not options or not isinstance(options, list):
+                        options = ["A) 선택지를 불러올 수 없습니다."]
+                    
                     for opt in options:
-                        option_texts.append(opt)
+                        if isinstance(opt, str):
+                            option_texts.append(opt)
+                    
+                    # 선택지가 비어있는 경우 기본값 추가
+                    if not option_texts:
+                        option_texts = ["A) 선택지가 제공되지 않았습니다."]
                     
                     if not st.session_state.show_explanation:
                         answer = st.radio(
@@ -308,6 +318,9 @@ def quiz_page():
                         selected_option = st.session_state.selected_answer
                         
                         is_correct = False
+                        correct_option = "정답을 확인할 수 없습니다."
+                        
+                        # 정답 확인
                         for opt in option_texts:
                             if correct_answer in opt:
                                 correct_option = opt
