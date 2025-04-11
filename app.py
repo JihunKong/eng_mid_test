@@ -9,6 +9,23 @@ import random
 import requests
 from datetime import datetime
 
+def display_text_with_translation(text: str, translation: str):
+    """텍스트와 번역을 문장 단위로 번갈아가며 표시"""
+    # 문장 분리 (마침표, 물음표, 느낌표 기준)
+    english_sentences = [s.strip() for s in re.split(r'[.!?]', text) if s.strip()]
+    korean_sentences = [s.strip() for s in re.split(r'[.!?]', translation) if s.strip()]
+    
+    # 최대 문장 수 맞추기
+    min_sentences = min(len(english_sentences), len(korean_sentences))
+    english_sentences = english_sentences[:min_sentences]
+    korean_sentences = korean_sentences[:min_sentences]
+    
+    # 문장 단위로 번갈아가며 표시
+    for eng, kor in zip(english_sentences, korean_sentences):
+        st.markdown(f"**{eng}**")
+        st.markdown(f"*{kor}*")
+        st.markdown("---")
+
 # WebSocket 설정
 st.set_page_config(
     page_title="영어 학습 도우미",
@@ -254,23 +271,6 @@ elif page == "학습 분석":
 # 푸터
 st.markdown("---")
 st.markdown("© 2024 영어 학습 도우미. All rights reserved.")
-
-def display_text_with_translation(text: str, translation: str):
-    """텍스트와 번역을 문장 단위로 번갈아가며 표시"""
-    # 문장 분리 (마침표, 물음표, 느낌표 기준)
-    english_sentences = [s.strip() for s in re.split(r'[.!?]', text) if s.strip()]
-    korean_sentences = [s.strip() for s in re.split(r'[.!?]', translation) if s.strip()]
-    
-    # 최대 문장 수 맞추기
-    min_sentences = min(len(english_sentences), len(korean_sentences))
-    english_sentences = english_sentences[:min_sentences]
-    korean_sentences = korean_sentences[:min_sentences]
-    
-    # 문장 단위로 번갈아가며 표시
-    for eng, kor in zip(english_sentences, korean_sentences):
-        st.markdown(f"**{eng}**")
-        st.markdown(f"*{kor}*")
-        st.markdown("---")
 
 def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[str]]:
     """빈칸 채우기 문제 생성"""
