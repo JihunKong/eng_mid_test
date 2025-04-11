@@ -53,49 +53,34 @@ def get_ai_helper():
 ai_helper = get_ai_helper()
 
 # 지문과 해석 분리 함수
-def split_text_and_translation(content):
-    if not content:
-        return None, None
-    
-    # 영어 지문과 한국어 해석 분리
-    english_text = []
-    korean_text = []
-    
-    lines = content.split('\n')
+def split_text_and_translation(text):
+    """텍스트를 영어 지문과 한국어 해석으로 분리"""
+    lines = text.split('\n')
+    english_lines = []
+    korean_lines = []
     is_english = True
     
     for line in lines:
-        if line.strip() == '':
+        line = line.strip()
+        if not line:
             continue
             
-        # 페이지 번호 제거
-        if re.match(r'^p\.\d+$', line.strip()):
-            continue
-            
-        # 영어/한국어 구분 기준
-        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다') or line.strip().startswith('그날 있었던 일들은'):
-            is_english = False
-        elif line.strip().startswith('Lesson') or line.strip().startswith('Tom Michell') or line.strip().startswith('From the first day'):
+        # 영어와 한국어를 구분하는 로직
+        if line.startswith('Lesson') or line.startswith('Can I Swim?') or line.startswith('Diego') or line.startswith('I was') or line.startswith('The events'):
             is_english = True
-        elif line.strip().startswith('성격이 반대인 사람들') or line.strip().startswith('그들은 서로를 보완한다') or line.strip().startswith('그들의 협력은'):
+        elif line.startswith('수영해도 될까요?') or line.startswith('Tom Michell은') or line.startswith('Diego의') or line.startswith('나는') or line.startswith('그날'):
             is_english = False
-        elif line.strip().startswith('Opposite Personalities') or line.strip().startswith('Everybody is unique'):
-            is_english = True
-        elif line.strip().startswith('호랑이는') or line.strip().startswith('그들은') or line.strip().startswith('우리는'):
-            is_english = False
-        elif line.strip().startswith('Turn Off the Lights') or line.strip().startswith('You can protect tigers'):
-            is_english = True
             
         if is_english:
-            english_text.append(line)
+            english_lines.append(line)
         else:
-            korean_text.append(line)
+            korean_lines.append(line)
     
     # 빈 줄 제거
-    english_text = [line for line in english_text if line.strip()]
-    korean_text = [line for line in korean_text if line.strip()]
+    english_text = '\n'.join(line for line in english_lines if line.strip())
+    korean_text = '\n'.join(line for line in korean_lines if line.strip())
     
-    return '\n'.join(english_text), '\n'.join(korean_text)
+    return english_text, korean_text
 
 # 마크다운 파일 읽기 함수
 def read_markdown_file(file_path):
