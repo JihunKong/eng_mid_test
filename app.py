@@ -267,14 +267,21 @@ def quiz_page():
     """문제 풀기 페이지"""
     st.title("문제 풀기")
     
-    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
     
-    if uploaded_file:
-        text = read_file(uploaded_file)
+    if selected_file:
+        content = read_markdown_file(selected_file)
         
-        if not text:
+        if not content:
             st.error("파일을 읽을 수 없습니다.")
             return
+        
+        # 영어 텍스트만 추출
+        english_text, _ = split_text_and_translation(content)
         
         # 난이도 선택
         difficulty = st.selectbox("문제 난이도 선택", ["쉬움", "보통", "어려움"])
@@ -283,7 +290,7 @@ def quiz_page():
         if st.button("문제 생성"):
             with st.spinner("문제를 생성 중입니다..."):
                 difficulty_eng = {"쉬움": "easy", "보통": "medium", "어려움": "hard"}
-                questions = call_ai_helper('generate_questions', text, difficulty_eng[difficulty])
+                questions = call_ai_helper('generate_questions', english_text, difficulty_eng[difficulty])
                 
                 if questions:
                     st.session_state.questions = questions
@@ -300,19 +307,26 @@ def fill_in_blank_page():
     """빈칸 채우기 문제 페이지"""
     st.title("빈칸 채우기 문제")
     
-    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
     
-    if uploaded_file:
-        text = read_file(uploaded_file)
+    if selected_file:
+        content = read_markdown_file(selected_file)
         
-        if not text:
+        if not content:
             st.error("파일을 읽을 수 없습니다.")
             return
+        
+        # 영어 텍스트만 추출
+        english_text, _ = split_text_and_translation(content)
         
         # 문제 생성
         if st.button("문제 생성"):
             with st.spinner("문제를 생성 중입니다..."):
-                questions_text = call_ai_helper('generate_fill_in_blank', text)
+                questions_text = call_ai_helper('generate_fill_in_blank', english_text)
                 if not questions_text:
                     st.error("문제를 생성할 수 없습니다.")
                     return
@@ -341,21 +355,28 @@ def vocabulary_page():
     """단어 학습 페이지"""
     st.title("단어 학습")
     
-    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
     
-    if uploaded_file:
-        text = read_file(uploaded_file)
+    if selected_file:
+        content = read_markdown_file(selected_file)
         
-        if not text:
+        if not content:
             st.error("파일을 읽을 수 없습니다.")
             return
+        
+        # 영어 텍스트만 추출
+        english_text, _ = split_text_and_translation(content)
         
         # 단어 입력
         word = st.text_input("학습할 단어를 입력하세요")
         
         if word and st.button("단어 설명 보기"):
             with st.spinner("단어 정보를 가져오는 중입니다..."):
-                explanation = call_ai_helper('explain_vocabulary', word, text)
+                explanation = call_ai_helper('explain_vocabulary', word, english_text)
                 
                 if explanation:
                     st.markdown("## 단어 설명")
@@ -367,19 +388,26 @@ def sentence_rearrangement_page():
     """문장 재배열 페이지"""
     st.title("문장 재배열")
     
-    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
     
-    if uploaded_file:
-        text = read_file(uploaded_file)
+    if selected_file:
+        content = read_markdown_file(selected_file)
         
-        if not text:
+        if not content:
             st.error("파일을 읽을 수 없습니다.")
             return
+        
+        # 영어 텍스트만 추출
+        english_text, _ = split_text_and_translation(content)
         
         # 문제 생성
         if st.button("문제 생성"):
             with st.spinner("문제를 생성 중입니다..."):
-                questions = call_ai_helper('generate_sentence_rearrangement', text)
+                questions = call_ai_helper('generate_sentence_rearrangement', english_text)
                 
                 if questions:
                     st.session_state.rearrangement_questions = questions
@@ -396,19 +424,26 @@ def matching_game_page():
     """매칭 게임 페이지"""
     st.title("매칭 게임")
     
-    uploaded_file = st.file_uploader("파일을 업로드하세요 (txt, docx, pdf)", type=["txt", "docx", "pdf"])
+    # 파일 선택
+    selected_file = st.selectbox(
+        "파일 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
     
-    if uploaded_file:
-        text = read_file(uploaded_file)
+    if selected_file:
+        content = read_markdown_file(selected_file)
         
-        if not text:
+        if not content:
             st.error("파일을 읽을 수 없습니다.")
             return
+        
+        # 영어 텍스트만 추출
+        english_text, _ = split_text_and_translation(content)
         
         # 게임 생성
         if st.button("게임 생성"):
             with st.spinner("게임을 생성 중입니다..."):
-                game = call_ai_helper('generate_matching_game', text)
+                game = call_ai_helper('generate_matching_game', english_text)
                 
                 if game:
                     st.session_state.matching_game = game
@@ -420,23 +455,6 @@ def matching_game_page():
         if 'matching_game' in st.session_state:
             st.markdown("## 매칭 게임")
             st.markdown(st.session_state.matching_game)
-
-def read_file(uploaded_file):
-    """업로드된 파일 읽기"""
-    try:
-        # 파일 확장자 확인
-        file_extension = uploaded_file.name.split('.')[-1].lower()
-        
-        # txt 파일
-        if file_extension == 'txt':
-            return uploaded_file.getvalue().decode('utf-8')
-        # 다른 형식의 파일은 현재 지원하지 않음
-        else:
-            st.error(f"{file_extension} 형식의 파일은 현재 지원하지 않습니다.")
-            return None
-    except Exception as e:
-        st.error(f"파일을 읽는 중 오류가 발생했습니다: {str(e)}")
-        return None
 
 # 푸터
 st.markdown("---")
