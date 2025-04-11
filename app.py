@@ -333,65 +333,82 @@ def main():
         if selected_file:
             text, _ = load_markdown_file(selected_file)
             if text:
-                questions, answers = generate_fill_in_the_blank(text)
-                if questions:
-                    st.session_state['fill_in_blank_questions'] = questions
-                    st.session_state['fill_in_blank_answers'] = answers
-                    st.session_state['current_question'] = 0
-                    st.session_state['user_answers'] = [""] * len(questions)
-                    st.session_state['show_current_answer'] = False
-                
-        if 'fill_in_blank_questions' in st.session_state:
-            questions = st.session_state['fill_in_blank_questions']
-            current_question = st.session_state['current_question']
-            user_answers = st.session_state['user_answers']
-            
-            # 현재 문제 표시
-            if current_question < len(questions):
-                question = questions[current_question]
-                st.markdown(f"### 문제 {current_question + 1}/{len(questions)}")
-                st.markdown(f"**{question['original']}**")
-                st.markdown("")
-                st.markdown(f"빈칸: {question['blank']}")
-                st.markdown("")
-                
-                # 답 입력
-                user_answer = st.text_input("답을 입력하세요:", key=f"answer_{current_question}")
-                
-                # 답 제출 버튼
-                if st.button("답 제출"):
-                    user_answers[current_question] = user_answer
-                    st.session_state['show_current_answer'] = True
-                
-                # 정답과 해설 표시
-                if st.session_state['show_current_answer']:
-                    st.markdown("### 정답")
-                    st.markdown(f"**{st.session_state['fill_in_blank_answers'][current_question]}**")
-                    st.markdown("")
-                    st.markdown("### 해설")
-                    st.markdown(question['explanation'])
-                    st.markdown("")
-                    
-                    # 다음 문제 버튼
-                    if st.button("다음 문제"):
-                        st.session_state['current_question'] += 1
+                try:
+                    questions, answers = generate_fill_in_the_blank(text)
+                    if questions and answers:  # 문제와 답이 모두 있는지 확인
+                        st.session_state['fill_in_blank_questions'] = questions
+                        st.session_state['fill_in_blank_answers'] = answers
+                        st.session_state['current_question'] = 0
+                        st.session_state['user_answers'] = [""] * len(questions)
                         st.session_state['show_current_answer'] = False
-                        st.experimental_rerun()
-            else:
-                st.markdown("### 모든 문제를 완료했습니다!")
-                st.markdown("### 전체 결과")
-                for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
-                    st.markdown(f"**문제 {i + 1}**")
-                    st.markdown(f"내 답: {user_answer}")
-                    st.markdown(f"정답: {correct_answer}")
-                    st.markdown("")
+                    else:
+                        st.error("⚠️ 문제를 생성할 수 없습니다. 텍스트를 다시 확인해주세요.")
+                except Exception as e:
+                    st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
+        
+        # 세션 상태 초기화 확인
+        if 'fill_in_blank_questions' not in st.session_state:
+            st.session_state['fill_in_blank_questions'] = []
+            st.session_state['fill_in_blank_answers'] = []
+            st.session_state['current_question'] = 0
+            st.session_state['user_answers'] = []
+            st.session_state['show_current_answer'] = False
+        
+        questions = st.session_state['fill_in_blank_questions']
+        current_question = st.session_state['current_question']
+        user_answers = st.session_state['user_answers']
+        
+        if not questions:
+            st.info("📝 파일을 선택하고 문제를 생성해주세요.")
+            return
+            
+        # 현재 문제 표시
+        if current_question < len(questions):
+            question = questions[current_question]
+            st.markdown(f"### 문제 {current_question + 1}/{len(questions)}")
+            st.markdown(f"**{question['original']}**")
+            st.markdown("")
+            st.markdown(f"빈칸: {question['blank']}")
+            st.markdown("")
+            
+            # 답 입력
+            user_answer = st.text_input("답을 입력하세요:", key=f"answer_{current_question}")
+            
+            # 답 제출 버튼
+            if st.button("답 제출"):
+                user_answers[current_question] = user_answer
+                st.session_state['show_current_answer'] = True
+                st.experimental_rerun()
+            
+            # 정답과 해설 표시
+            if st.session_state['show_current_answer']:
+                st.markdown("### 정답")
+                st.markdown(f"**{st.session_state['fill_in_blank_answers'][current_question]}**")
+                st.markdown("")
+                st.markdown("### 해설")
+                st.markdown(question.get('explanation', '해설이 없습니다.'))
+                st.markdown("")
                 
-                # 다시 풀기 버튼
-                if st.button("다시 풀기"):
-                    st.session_state['current_question'] = 0
-                    st.session_state['user_answers'] = [""] * len(questions)
+                # 다음 문제 버튼
+                if st.button("다음 문제"):
+                    st.session_state['current_question'] += 1
                     st.session_state['show_current_answer'] = False
                     st.experimental_rerun()
+        else:
+            st.markdown("### 모든 문제를 완료했습니다!")
+            st.markdown("### 전체 결과")
+            for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
+                st.markdown(f"**문제 {i + 1}**")
+                st.markdown(f"내 답: {user_answer}")
+                st.markdown(f"정답: {correct_answer}")
+                st.markdown("")
+            
+            # 다시 풀기 버튼
+            if st.button("다시 풀기"):
+                st.session_state['current_question'] = 0
+                st.session_state['user_answers'] = [""] * len(questions)
+                st.session_state['show_current_answer'] = False
+                st.experimental_rerun()
 
 if __name__ == "__main__":
     main() 
