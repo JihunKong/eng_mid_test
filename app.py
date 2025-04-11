@@ -28,21 +28,26 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[Di
             if not line:
                 continue
                 
-            if line.startswith('문제'):
-                if current_question:
-                    questions.append(current_question)
+            if line == '문제:':
                 current_section = '문제'
-                current_question = {'question': line, 'options': []}
-            elif line.startswith('정답'):
-                if current_answer:
-                    answers.append(current_answer)
-                current_section = '정답'
-                current_answer = {'answer': '', 'explanation': ''}
-            elif current_section == '문제':
-                if line.startswith(('A)', 'B)', 'C)', 'D)')):
+                continue
+            elif line == '해설:':
+                current_section = '해설'
+                continue
+                
+            if current_section == '문제':
+                if line[0].isdigit() and line[1] == '.':
+                    if current_question:
+                        questions.append(current_question)
+                    current_question = {'question': line, 'options': []}
+                elif line.startswith(('A)', 'B)', 'C)', 'D)')):
                     current_question['options'].append(line)
-            elif current_section == '정답':
-                if line.startswith('정답:'):
+            elif current_section == '해설':
+                if line[0].isdigit() and line[1] == '.':
+                    if current_answer:
+                        answers.append(current_answer)
+                    current_answer = {'answer': '', 'explanation': ''}
+                elif line.startswith('정답:'):
                     current_answer['answer'] = line.replace('정답:', '').strip()
                 elif line.startswith('해설:'):
                     current_answer['explanation'] = line.replace('해설:', '').strip()
@@ -61,14 +66,14 @@ def display_questions(questions: List[Dict[str, str]], answers: List[Dict[str, s
     """문제와 답안을 표시"""
     st.markdown("### 문제")
     for i, question in enumerate(questions, 1):
-        st.markdown(f"**{i}. {question['question']}**")
+        st.markdown(f"**{question['question']}**")
         for option in question['options']:
             st.markdown(option)
         st.markdown("---")
     
     # 답안 확인 버튼
     if st.button("답안 확인"):
-        st.markdown("### 정답 및 해설")
+        st.markdown("### 해설")
         for i, answer in enumerate(answers, 1):
             st.markdown(f"**{i}. {answer['answer']}**")
             st.markdown(f"{answer['explanation']}")
