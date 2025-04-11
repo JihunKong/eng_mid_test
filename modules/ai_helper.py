@@ -1,5 +1,7 @@
 from anthropic import Anthropic
 from typing import List, Dict, Any
+import anthropic
+import json
 
 class AIHelper:
     def __init__(self, api_key: str):
@@ -15,27 +17,100 @@ class AIHelper:
     def generate_questions(self, text: str, difficulty: str = "medium", num_questions: int = 5) -> str:
         """지문 기반 문제 생성"""
         prompt = f"""
-        다음 영어 지문을 읽고 {difficulty} 난이도의 객관식 문제 {num_questions}개를 생성해주세요:
-        
+        다음 영어 지문을 바탕으로 {difficulty} 난이도의 객관식 문제 {num_questions}개를 생성해주세요.
+        각 문제는 다음 형식을 따라야 합니다:
+        1. 문제
+        2. 4개의 보기 (A, B, C, D)
+        3. 정답
+        4. 해설
+
+        지문:
         {text}
-        
-        각 문제는 다음 형식으로 작성해주세요:
-        - 문제 번호와 질문
-        - 4개의 선택지 (a, b, c, d)
-        - 정답 및 해설
         """
         
-        try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            return response.content[0].text
-        except Exception as e:
-            raise ValueError(f"문제 생성 중 오류 발생: {str(e)}")
+        response = self.client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=4000,
+            temperature=0.7,
+            system="You are an English teacher creating test questions.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return response.content[0].text
+    
+    def generate_fill_in_blank(self, text: str):
+        prompt = f"""
+        다음 영어 지문을 바탕으로 빈칸 채우기 문제 5개를 생성해주세요.
+        각 문제는 다음 형식을 따라야 합니다:
+        1. 문장 (빈칸 포함)
+        2. 정답
+        3. 해설
+
+        지문:
+        {text}
+        """
+        
+        response = self.client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=4000,
+            temperature=0.7,
+            system="You are an English teacher creating fill-in-the-blank exercises.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return response.content[0].text
+    
+    def generate_sentence_rearrangement(self, text: str):
+        prompt = f"""
+        다음 영어 지문을 바탕으로 문장 재배열 문제 5개를 생성해주세요.
+        각 문제는 다음 형식을 따라야 합니다:
+        1. 섞인 문장들
+        2. 정답 순서
+        3. 해설
+
+        지문:
+        {text}
+        """
+        
+        response = self.client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=4000,
+            temperature=0.7,
+            system="You are an English teacher creating sentence rearrangement exercises.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return response.content[0].text
+    
+    def generate_matching_game(self, text: str):
+        prompt = f"""
+        다음 영어 지문을 바탕으로 매칭 게임 문제 5개를 생성해주세요.
+        각 문제는 다음 형식을 따라야 합니다:
+        1. 영어 단어/문장과 한국어 의미를 매칭하는 문제
+        2. 정답
+        3. 해설
+
+        지문:
+        {text}
+        """
+        
+        response = self.client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=4000,
+            temperature=0.7,
+            system="You are an English teacher creating matching game exercises.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return response.content[0].text
     
     def explain_vocabulary(self, word: str, context: str) -> str:
         """단어 설명 및 예문 제공"""

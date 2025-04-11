@@ -1,5 +1,5 @@
 
- 본문 텍스트   Lesson 3. We Are All Connected 
+Lesson 3. We Are All Connected 
 
 
 
@@ -8,7 +8,6 @@
  
 Turn Off the Lights and Save a Tiger
 
-p.69
 You can protect tigers simply by switching off the lights. This may sound strange, but it is actually true. An everyday action that helps us save energy can also help save an endangered species. How does this work? Let’s take a look.
 
 A Species in Danger
@@ -22,13 +21,11 @@ Tigers, one of the world’s largest *feline species, have long been the kings o
 세계에서 가장 큰 고양잇과 동물 중 하나인 호랑이는 오랫동안 아시아 숲의 왕이었습니다. 그들의 서식지에서 지배적인 포식자임에도 불구하고, 그들은 조용히 움직이며 대부분의 시간을 눈에 띄지 않는 상태로 지냅니다. 고대인들이 야생에서 호랑이와 마주쳤을 때 어떻게 느꼈을지 상상해 보십시오! 호랑이가 수 세기 동안 힘과 용기의 상징으로 존재하며 인간에게 두려움과 숭배의 대상이었던 것은 그리 놀라운 일이 아닙니다. 고대 암각화에 호랑이의 모습이 그려져 있다는 사실은 역사에 걸쳐서 호랑이가 인간과 얼마나 밀접하게 관련되어 있는지를 보여줍니다.
 
 
-p.70
 At one time, tigers were found all across Asia, from Korea to Turkey. However, the world’s tiger population has been shrinking rapidly. Illegal hunting and habitat loss are the main reasons behind this decrease. At the start of the 20th century, it was estimated that there were approximately 100,000 wild tigers. In recent years, however, three of the nine subspecies of tigers have become extinct. In fact, it is now estimated that there are fewer than 4,000 tigers living in the wild. Some experts even predict that the last of the world’s wild tigers will disappear within the next 10 years.
 
 한때 호랑이는 한국에서 터키에 이르는 아시아 전역에서 발견되었습니다. 하지만 전 세계의 호랑이 수는 급격히 감소하고 있습니다. 불법 사냥과 서식지 상실이 이러한 (개체 수) 감소의 주요 원인입니다. 20세기 초에는, 약 10만 마리의 야생 호랑이가 있었던 것으로 추정되었습니다. 그러나 최근 몇 년간 9개의 호랑이 아종(亞種) 중 3개의 종은 멸종되었습니다. 실제로 현재는 야생에서 사는 호랑이가 4,000마리 미만인 것으로 추정됩니다. 어떤 전문가들은 심지어 전 세계의 마지막 야생 호랑이가 향후 10년 안에 사라질 것으로 예상합니다.
 
 
-p.71
 Our Interconnected World
 It would be very sad if there were no more wild tigers. Would it really matter, though? After all, we could still see them in zoos or watch programs about them on TV. Shouldn’t we be more worried about protecting human beings? The fact is, however, that we need to protect tigers in order to protect ourselves. This is because all of Earth’s species are interconnected.
 
@@ -40,13 +37,11 @@ Think about what would happen if tigers became extinct. Existing at the top of t
 호랑이가 멸종된다면 어떤 일이 일어날지 생각해 보십시오. 그들은 먹이 사슬의 정점에 존재하며 사슴과 멧돼지같이 그들이 잡아먹는 동물들의 개체 수를 유지합니다. 호랑이가 없다면, 이러한 종들의 수가 급격히 증가할 것입니다. 그 결과로, 그들의 먹이인 초목이 사라지기 시작할 것입니다. 이것은 새들과 곤충들이 그들의 집을 잃는 사태를 일으킬 것이고, 그것들을 잡아먹는 더 큰 동물들은 곧 먹이가 바닥나게 될 것입니다. 결국, 생태계 전체가 영향을 받게 될 것입니다. 인간도 예외가 아닌데, 우리는 공기, 음식 그리고 물을 포함하여 살아가는 데 필요한 모든 것을 자연에 의존하고 있기 때문입니다. 이렇게 해서 하나의 종이 사라지는 것이 지구 전체를 위협할 수도 있는 것입니다.
 
 
-p.72
 Now imagine what would happen if we made the effort to save tigers. Tigers are considered an “umbrella species.” This is an ecological term referring to species that live in a large area containing a variety of different ecosystems. If we choose to protect these species, we must conserve their habitat. As a result, the other species that share this habitat, including trees and insects, are protected too, as if there were a large umbrella being held over them.
 
 이제 우리가 호랑이를 보호하기 위해 노력한다면 어떤 일이 일어날지 상상해 보십시오. 호랑이는 ‘우산종’으로 여겨집니다. 이것은 서로 다른 다양한 생태계를 포함하는 넓은 지역에 사는 종을 일컫는 생태학적 용어입니다. 만약 우리가 이러한 종들을 보호하기로 결정한다면, 우리는 그들의 서식지를 보호해야만 합니다. 결과적으로, 나무와 곤충을 포함해 이 서식지를 공유하는 다른 종들도 마치 그들 위에 큰 우산이 씌워져 있는 것처럼 보호를 받게 됩니다.
 
 
-p.73
 Small Efforts with Big Results
 Now, it is obvious that we must protect tigers. You may, however, still wonder how switching off the lights helps. Well, the lights in our homes require electricity, and more than half of the world’s electricity is created by burning fossil fuels. When fossil fuels are burned, carbon dioxide is released into the air, and this contributes to climate change. Climate change has a number of negative effects, including rising sea levels that threaten many parts of the world. One of these places, called the Sundarbans, is an area on the coast of Bangladesh inhabited by a large number of tigers. If Earth’s oceans continue to rise, this area could be wiped out and its tiger population could be reduced by as much as 96%. By conserving energy, however, we can slow climate change, and this will slow the rise of the oceans. So keep switching off the lights whenever you’re the last person to leave a room!
 
@@ -55,7 +50,6 @@ Now, it is obvious that we must protect tigers. You may, however, still wonder h
 
 
 
-p.74
 You can also protect tigers when shopping. Many popular products, including chocolate, instant noodles, and soap, are made with palm oil. Unfortunately, forests where tigers live are being destroyed to build more and more palm oil plantations. Some palm oil, however, is produced in a more sustainable way. Products that use this environmentally friendly palm oil usually have a special mark on the label. Look for it the next time you go shopping! 
 
 Get Involved

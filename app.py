@@ -83,9 +83,8 @@ def split_text_and_translation(content):
             continue
             
         # 한국어 해석 시작 표시
-        if line.strip().startswith('수영해도 될까요?') or line.strip().startswith('반대의 성격, 훌륭한 동반자 관계') or line.strip().startswith('불을 끄고 호랑이를 살리세요'):
+        if line.strip().startswith('Tom Michell은') or line.strip().startswith('Diego의') or line.strip().startswith('나는 깜짝 놀랐다'):
             is_english = False
-            continue
             
         if is_english:
             english_text.append(line)
@@ -145,14 +144,55 @@ if page == "읽기 모드":
     
 elif page == "연습 모드":
     st.header("✍️ 연습 모드")
+    st.markdown("""
+        다양한 유형의 연습 문제를 풀어볼 수 있습니다.
+        아래에서 연습 유형을 선택해주세요.
+    """)
+    
     exercise_type = st.selectbox(
         "연습 유형 선택",
         ["빈칸 채우기", "문장 재배열", "매칭 게임"]
     )
     
-    if exercise_type == "빈칸 채우기":
-        st.write("빈칸 채우기 연습을 시작합니다.")
-        # 빈칸 채우기 기능 구현 예정
+    # 마크다운 파일 선택
+    selected_file = st.selectbox(
+        "연습을 위한 지문 선택",
+        ["part1.md", "part2.md", "part3.md"]
+    )
+    
+    if selected_file:
+        content = read_markdown_file(selected_file)
+        english_text, _ = split_text_and_translation(content)
+        
+        if english_text:
+            if exercise_type == "빈칸 채우기":
+                st.subheader("빈칸 채우기")
+                with st.spinner("문제를 생성 중입니다..."):
+                    try:
+                        questions = ai_helper.generate_fill_in_blank(english_text)
+                        st.write(questions)
+                    except Exception as e:
+                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
+            
+            elif exercise_type == "문장 재배열":
+                st.subheader("문장 재배열")
+                with st.spinner("문제를 생성 중입니다..."):
+                    try:
+                        questions = ai_helper.generate_sentence_rearrangement(english_text)
+                        st.write(questions)
+                    except Exception as e:
+                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
+            
+            elif exercise_type == "매칭 게임":
+                st.subheader("매칭 게임")
+                with st.spinner("문제를 생성 중입니다..."):
+                    try:
+                        questions = ai_helper.generate_matching_game(english_text)
+                        st.write(questions)
+                    except Exception as e:
+                        st.error(f"⚠️ 문제 생성 중 오류가 발생했습니다: {str(e)}")
+        else:
+            st.warning("선택한 파일에서 지문을 불러올 수 없습니다. 파일이 올바른 형식인지 확인해주세요.")
     
 elif page == "테스트 모드":
     st.header("📝 테스트 모드")
