@@ -20,10 +20,15 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
         answers = []
         
         for item in result:
+            # 문제 형식 변경
+            question_text = item["original"]
+            options = item.get("options", [])
+            explanation = item.get("explanation", "")
+            
             questions.append({
-                "original": item["original"],
-                "blank": item["blank"],
-                "explanation": item.get("explanation", "")
+                "question": question_text,
+                "options": options,
+                "explanation": explanation
             })
             answers.append(item["answer"])
             
@@ -356,7 +361,7 @@ def main():
         st.markdown("### 문제")
         for i, question in enumerate(questions):
             st.markdown(f"**문제 {i + 1}**")
-            st.markdown(f"{question['original']}")
+            st.markdown(question['question'])
             st.markdown("")
             for option in question['options']:
                 st.markdown(option)
@@ -374,7 +379,7 @@ def main():
             for i, (question, user_answer, correct_answer) in enumerate(zip(questions, user_answers, st.session_state['fill_in_blank_answers'])):
                 st.markdown(f"**{i + 1}번 정답 및 해설**")
                 st.markdown(f"정답: {correct_answer}")
-                st.markdown(f"해설: {question.get('explanation', '해설이 없습니다.')}")
+                st.markdown(f"해설: {question['explanation']}")
                 st.markdown("---")
             
             # 다시 풀기 버튼
