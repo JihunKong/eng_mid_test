@@ -19,76 +19,59 @@ def generate_fill_in_the_blank(text: str) -> Tuple[List[Dict[str, str]], List[st
         questions = []
         answers = []
         
-        for item in result:
-            # 문제 형식 변경
-            question_text = item["question"]
-            options = item.get("options", [])
-            explanation = item.get("explanation", "")
-            
-            questions.append({
-                "question": question_text,
-                "options": options,
-                "explanation": explanation
-            })
-            answers.append(item["answer"])
+        # 문제와 해설을 분리
+        current_section = None
+        current_question = None
+        current_answer = None
+        
+        for line in result.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+                
+            if line.startswith('문제'):
+                if current_question and current_answer:
+                    questions.append(current_question)
+                    answers.append(current_answer)
+                current_section = '문제'
+                current_question = {'question': line, 'options': []}
+                current_answer = None
+            elif line.startswith('정답'):
+                current_section = '정답'
+                current_answer = {'answer': line, 'explanation': ''}
+            elif current_section == '문제':
+                if line.startswith(('A)', 'B)', 'C)', 'D)')):
+                    current_question['options'].append(line)
+            elif current_section == '정답':
+                if not current_answer['explanation']:
+                    current_answer['explanation'] = line
+                else:
+                    current_answer['explanation'] += '\n' + line
+        
+        # 마지막 문제 처리
+        if current_question and current_answer:
+            questions.append(current_question)
+            answers.append(current_answer)
             
         return questions, answers
     except:
         return [], []
 
-def display_questions(questions_text):
-    if not questions_text:
-        return
-    
-    # 문제와 해설을 분리
-    questions = []
-    answers = []
-    
-    current_section = None
-    current_content = []
-    
-    for line in questions_text.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-            
-        if line.startswith('문제'):
-            if current_section and current_content:
-                if current_section == '문제':
-                    questions.append('\n'.join(current_content))
-                elif current_section == '정답':
-                    answers.append('\n'.join(current_content))
-            current_section = '문제'
-            current_content = [line]
-        elif line.startswith('정답'):
-            if current_section and current_content:
-                if current_section == '문제':
-                    questions.append('\n'.join(current_content))
-                elif current_section == '정답':
-                    answers.append('\n'.join(current_content))
-            current_section = '정답'
-            current_content = [line]
-        else:
-            current_content.append(line)
-    
-    # 마지막 섹션 처리
-    if current_section and current_content:
-        if current_section == '문제':
-            questions.append('\n'.join(current_content))
-        elif current_section == '정답':
-            answers.append('\n'.join(current_content))
-    
-    # 문제 표시
-    st.subheader("문제")
+def display_questions(questions: List[Dict[str, str]], answers: List[Dict[str, str]], user_answers: List[str]):
+    """문제와 답안을 표시"""
+    st.markdown("### 문제")
     for i, question in enumerate(questions, 1):
-        st.markdown(f"**{question}**")
+        st.markdown(f"**{i}. {question['question']}**")
+        for option in question['options']:
+            st.markdown(option)
         st.markdown("---")
     
-    # 정답 확인 버튼
+    # 답안 확인 버튼
     if st.button("답안 확인"):
-        st.subheader("정답 및 해설")
+        st.markdown("### 정답 및 해설")
         for i, answer in enumerate(answers, 1):
-            st.markdown(f"**{answer}**")
+            st.markdown(f"**{i}. {answer['answer']}**")
+            st.markdown(f"{answer['explanation']}")
             st.markdown("---")
 
 def display_text_with_translation(text: str, translation: str):
