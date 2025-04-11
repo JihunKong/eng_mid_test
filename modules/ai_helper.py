@@ -181,7 +181,7 @@ class AIHelper:
                 question_data["options"] = ["A) 옵션이 올바르지 않습니다", "B) 옵션2", "C) 옵션3", "D) 옵션4"]
             elif len(question_data["options"]) < 2:
                 while len(question_data["options"]) < 4:
-                    question_data["options"].append(f"{chr(65 + len(question_data['options']))} 추가 옵션")
+                    question_data["options"].append(f"{chr(65 + len(question_data['options']))}) 추가 옵션")
             
             # answer 필드 검사 (A, B, C, D 중 하나인지)
             if not isinstance(question_data["answer"], str) or question_data["answer"] not in ["A", "B", "C", "D"]:

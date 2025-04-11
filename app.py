@@ -2,8 +2,9 @@
 
 import streamlit as st
 import os
-from typing import List, Dict, Tuple
-from modules.ai_helper import AIHelper
+from typing import List, Dict, Tuple, Any
+import re
+import json
 
 # 페이지 설정
 st.set_page_config(
@@ -12,22 +13,66 @@ st.set_page_config(
     layout="wide"
 )
 
-# API 키 확인
-api_key = os.environ.get("ANTHROPIC_API_KEY")
-if not api_key:
-    st.error("API 키가 설정되지 않았습니다. 환경 변수에 ANTHROPIC_API_KEY를 설정해주세요.")
-    st.stop()
-
-# AI 도우미 초기화
+# AI 도우미 초기화 함수
 @st.cache_resource
 def get_ai_helper():
     try:
-        return AIHelper(api_key=api_key)
+        # API 키 확인
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            st.error("API 키가 설정되지 않았습니다. 환경 변수에 ANTHROPIC_API_KEY를 설정해주세요.")
+            return None
+        
+        # AIHelper 모듈 가져오기 시도
+        try:
+            from modules.ai_helper import AIHelper
+            helper = AIHelper(api_key=api_key)
+            
+            # 필수 메서드 확인
+            required_methods = ['generate_questions', 'generate_single_question']
+            missing_methods = []
+            
+            for method in required_methods:
+                if not hasattr(helper, method) or not callable(getattr(helper, method)):
+                    missing_methods.append(method)
+            
+            if missing_methods:
+                st.warning(f"AI 도우미에 필요한 메서드가 없습니다: {', '.join(missing_methods)}")
+                # 필수 메서드가 없는 경우 직접 추가
+                if 'generate_single_question' in missing_methods:
+                    st.info("generate_single_question 메서드를 동적으로 추가합니다.")
+                    
+                    # 기본 단일 문제 생성 메서드 추가
+                    def generate_single_question(self, text: str, difficulty: str = "medium", question_type: str = "comprehension") -> Dict[str, Any]:
+                        """대체 단일 문제 생성 메서드"""
+                        return {
+                            "question": "다음 지문을 읽고 문제를 푸세요.",
+                            "options": [
+                                "A) 단일 문제 생성 기능을 사용할 수 없습니다.",
+                                "B) 일반 객관식 모드를 사용해보세요.",
+                                "C) 다시 시도해보세요.",
+                                "D) 다른 지문이나 난이도를 선택해보세요."
+                            ],
+                            "answer": "B",
+                            "explanation": "현재 단일 문제 생성 기능을 사용할 수 없습니다. 일반 객관식 모드를 사용해보세요."
+                        }
+                    
+                    # 메서드 동적 추가
+                    import types
+                    helper.generate_single_question = types.MethodType(generate_single_question, helper)
+            
+            return helper
+        except ImportError:
+            st.error("AI 도우미 모듈을 불러올 수 없습니다.")
+            return None
     except Exception as e:
         st.error(f"AI 도우미 초기화 중 오류 발생: {str(e)}")
-        st.stop()
+        return None
 
+# AI 도우미 인스턴스 생성
 ai_helper = get_ai_helper()
+if ai_helper is None:
+    st.error("AI 도우미를 초기화할 수 없습니다. 앱이 제한된 기능으로 실행됩니다.")
 
 def read_markdown_file(file_path):
     """마크다운 파일 읽기"""
@@ -57,7 +102,12 @@ def main():
     elif menu == "본문 읽기":
         reading_page()
     elif menu == "문제 풀기":
-        quiz_page()
+        # AI 도우미가 필요한 기능은 초기화 여부 확인
+        if ai_helper is None:
+            st.error("AI 도우미를 사용할 수 없어 문제 풀기 기능을 이용할 수 없습니다.")
+            st.info("API 키 설정을 확인하고 앱을 다시 시작해주세요.")
+        else:
+            quiz_page()
 
 def home_page():
     """홈 페이지"""
@@ -142,6 +192,12 @@ def reading_page():
 def quiz_page():
     """문제 풀기 페이지"""
     st.title("문제 풀기")
+    
+    # AI 도우미 확인
+    if ai_helper is None:
+        st.error("AI 도우미를 사용할 수 없어 문제 풀기 기능을 이용할 수 없습니다.")
+        st.info("API 키 설정을 확인하고 앱을 다시 시작해주세요.")
+        return
     
     # 메뉴 선택
     quiz_mode = st.sidebar.radio(
@@ -281,11 +337,35 @@ def quiz_page():
                                 if not english_text or len(english_text) < 10:
                                     st.error("지문이 너무 짧습니다. 다른 파일을 선택하세요.")
                                 else:
-                                    question_data = ai_helper.generate_single_question(
-                                        english_text, 
-                                        difficulty_eng.get(difficulty, "medium"),
-                                        st.session_state.current_question_type
-                                    )
+                                    # 메서드 존재 여부 확인
+                                    if hasattr(ai_helper, 'generate_single_question') and callable(getattr(ai_helper, 'generate_single_question')):
+                                        # 정상적으로 메서드 호출
+                                        question_data = ai_helper.generate_single_question(
+                                            english_text, 
+                                            difficulty_eng.get(difficulty, "medium"),
+                                            st.session_state.current_question_type
+                                        )
+                                    else:
+                                        # 메서드가 없을 경우 대체 로직 사용
+                                        st.warning("단일 문제 생성 기능을 사용할 수 없습니다. 일반 문제 생성으로 전환합니다.")
+                                        questions = ai_helper.generate_questions(
+                                            english_text, 
+                                            difficulty_eng.get(difficulty, "medium"),
+                                            1
+                                        )
+                                        
+                                        # 간단한 문제 형식으로 변환
+                                        question_data = {
+                                            "question": "다음 지문을 읽고 문제를 푸세요.",
+                                            "options": [
+                                                "A) 옵션 A",
+                                                "B) 옵션 B",
+                                                "C) 옵션 C",
+                                                "D) 옵션 D"
+                                            ],
+                                            "answer": "A",
+                                            "explanation": "단일 문제 생성 기능을 사용할 수 없습니다. 일반 문제 생성으로 전환했습니다."
+                                        }
                                     
                                     # 유효한 문제인지 확인
                                     if (isinstance(question_data, dict) and 
@@ -300,6 +380,24 @@ def quiz_page():
                                     else:
                                         st.error("문제 생성에 실패했습니다. 다시 시도하세요.")
                                         st.session_state.error_count += 1
+                            except AttributeError as e:
+                                st.error(f"문제 생성 기능을 사용할 수 없습니다: {str(e)}")
+                                st.session_state.error_count += 1
+                                # 대체 출력
+                                fallback_question = {
+                                    "question": "AI 헬퍼 메서드 오류로 문제를 생성할 수 없습니다.",
+                                    "options": [
+                                        "A) 다시 시도해주세요", 
+                                        "B) 다른 유형의 문제를 선택해보세요", 
+                                        "C) 난이도를 변경해보세요", 
+                                        "D) 일반 객관식 모드를 사용해보세요"
+                                    ],
+                                    "answer": "D",
+                                    "explanation": "현재 단계별 학습 모드에 문제가 있습니다. 일반 객관식 모드를 사용해보세요."
+                                }
+                                st.session_state.current_question = fallback_question
+                                st.session_state.selected_answer = None
+                                st.session_state.show_explanation = False
                             except Exception as e:
                                 st.error(f"문제 생성 중 오류가 발생했습니다: {str(e)}")
                                 st.session_state.error_count += 1
