@@ -41,36 +41,37 @@ class AIHelper:
     def generate_fill_in_blank(self, text: str):
         prompt = f"""
         다음 영어 지문을 바탕으로 객관식 문제 5개를 생성해주세요.
-        각 문제는 다음 형식을 따라야 합니다:
-        1. 문제
-        2. 4개의 보기 (A, B, C, D)
-        3. 정답
-        4. 해설
-
-        지문:
-        {text}
+        
+        문제 생성 규칙:
+        1. 각 문제는 지문의 핵심 내용을 정확하게 묻는 질문이어야 합니다.
+        2. 보기는 4개이며, 정답은 지문에서 직접적으로 언급된 내용이어야 합니다.
+        3. 해설은 지문의 구체적인 부분을 인용하여 설명해야 합니다.
+        4. 문제, 보기, 정답, 해설은 모두 한국어로 작성해야 합니다.
 
         출력 형식:
         [
             {{
-                "question": "문제 내용",
+                "question": "문제 내용 (예: 'Tom Michell은 어떤 일을 했나요?')",
                 "options": [
-                    "A) 보기 1",
-                    "B) 보기 2",
-                    "C) 보기 3",
-                    "D) 보기 4"
+                    "A) 보기 1 (예: '영어 교사')",
+                    "B) 보기 2 (예: '펭귄 연구가')",
+                    "C) 보기 3 (예: '동물원 관리인')",
+                    "D) 보기 4 (예: '해양 생물학자')"
                 ],
-                "answer": "정답",
-                "explanation": "해설"
+                "answer": "정답 (예: 'A) 영어 교사')",
+                "explanation": "해설 (예: '지문 첫 번째 문단에 \"In the 1970s, he worked as an English teacher...\"라고 명시되어 있습니다.')"
             }},
             ...
         ]
+
+        지문:
+        {text}
         """
         
         response = self.client.messages.create(
             model=self.model,
             max_tokens=4000,
-            system="You are an English teacher creating multiple-choice questions.",
+            system="You are an English teacher creating multiple-choice questions. You must create questions that test comprehension of the text, with clear correct answers and detailed explanations.",
             messages=[
                 {"role": "user", "content": prompt}
             ]
